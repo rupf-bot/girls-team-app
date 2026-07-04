@@ -95,6 +95,8 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    will-change: transform;
+    backface-visibility: hidden;
   }
   .header-title {
     font-size: 18px;
@@ -212,6 +214,9 @@
   .login-side-art.right { right: 0; }
   @media (min-width: 600px) {
     .login-side-art { display: block; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .login-side-art { display: none; }
   }
   #page-login {
     background: var(--page-bg);
@@ -2390,6 +2395,7 @@ function renderTrainingDetail(ev) {
 function renderTournamentDetail(ev) {
   const MAX_SQUAD = 10;
   const isCoach = state.currentUser && state.currentUser.role === 'coach';
+  const currentPlayerId = state.currentUser && state.currentUser.playerId;
   const open    = getOpenPlayers(ev.id);
   const coming  = getComingPlayers(ev.id);
   const absent  = getAbsentPlayers(ev.id);
@@ -2404,6 +2410,12 @@ function renderTournamentDetail(ev) {
     const sqSt = getSquadStatus(ev.id, p.id);
     const benched = getBenchedCount(p.id);
     const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× ausgelassen</span>` : '';
+    const squadControl = isCoach
+      ? `<div class="squad-btns">
+        <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
+        <button class="squad-btn ${sqSt === 'out' ? 'out' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'out')" title="Nicht berücksichtigt">✗</button>
+      </div>`
+      : `<div class="parent-squad-badge ${sqSt === 'in' ? 'in' : sqSt === 'out' ? 'out' : 'pending'}">${sqSt === 'in' ? 'Aufgebot ✓' : sqSt === 'out' ? 'Nicht dabei' : 'Offen'}</div>`;
     return `
     <div class="squad-player-row">
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${getInitials(p.name)}</div>
@@ -2411,26 +2423,40 @@ function renderTournamentDetail(ev) {
         <div class="squad-player-name">${p.name}</div>
         <div class="squad-player-meta">${p.parent}${benchedBadge ? ' · ' + benchedBadge : ''}</div>
       </div>
-      <div class="squad-btns">
-        <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
-        <button class="squad-btn ${sqSt === 'out' ? 'out' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'out')" title="Nicht berücksichtigt">✗</button>
-      </div>
+      ${squadControl}
     </div>`;
   }
 
   function playerRowSimple(p, status) {
     const icon = status === 'open' ? '?' : status === 'absent' ? '✗' : '🩹';
+    const toggle = isCoach
+      ? `<button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})">
+        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
+      </button>`
+      : `<div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>`;
     return `
     <div class="player-row">
       <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
       <div>
         <div class="player-name">${p.name}</div>
       </div>
-      <button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})">
-        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
-      </button>
+      ${toggle}
     </div>`;
   }
+
+  const locked = !isCoach && isLockedForParent(ev.date);
+  const started = isPast(ev.date);
+  const myStatus = !isCoach && currentPlayerId ? getStatus(ev.id, currentPlayerId) : null;
+  const myStatusSection = (!isCoach && currentPlayerId) ? `
+    <div class="section-padding" style="padding-top:0">
+      ${locked
+        ? `<div style="font-size:13px;color:var(--gray-500);background:var(--gray-100);border-radius:8px;padding:10px 12px">${started ? 'Event hat begonnen — nur Trainer können noch ändern' : 'Anmeldeschluss erreicht — Änderungen waren bis 5 Std. vor Start möglich'}</div>`
+        : `<div class="list-status-btns">
+            <button class="list-status-btn coming ${myStatus === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${currentPlayerId}, 'coming')">✓ Verfügbar</button>
+            <button class="list-status-btn absent ${myStatus === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${currentPlayerId}, 'absent')">✗ Absagen</button>
+            <button class="list-status-btn injured ${myStatus === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${currentPlayerId}, 'injured')">🩹 Verletzt</button>
+          </div>`}
+    </div>` : '';
 
   document.getElementById('event-detail-content').innerHTML = `
     <div class="detail-type-banner tournament">
@@ -2444,9 +2470,10 @@ function renderTournamentDetail(ev) {
       <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
-      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--brand-blue-mid);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">📅 Zum Google Kalender hinzufügen</a>
       ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--brand-blue-mid);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
+      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--brand-blue-mid);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">📅 Zum Google Kalender hinzufügen</a>
     </div>
+    ${myStatusSection}
 
     <div class="squad-header">
       <div>
@@ -3033,8 +3060,11 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
   const pct = Math.round(count / maxCount * 100);
   const attendLabel = isTrn ? `${count}/${maxCount}` : `${count} verfügbar`;
   const expanded = canToggle && expandedParentEventId === ev.id;
+  const clickHandler = !isTrn
+    ? `onclick="openEventDetail(${ev.id})" style="cursor:pointer"`
+    : (canToggle ? `onclick="toggleParentEventExpand(${ev.id})" style="cursor:pointer"` : '');
   return `
-    <div class="parent-event-item ${pastEv ? 'past' : ''} ${expanded ? 'expanded' : ''}" ${canToggle ? `onclick="toggleParentEventExpand(${ev.id})" style="cursor:pointer"` : ''}>
+    <div class="parent-event-item ${pastEv ? 'past' : ''} ${expanded ? 'expanded' : ''}" ${clickHandler}>
       <div class="event-date-col">
         <div class="event-date-day">${day}</div>
         <div class="event-date-month">${month}</div>
