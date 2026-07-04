@@ -1674,13 +1674,19 @@ function pruneObsoleteEvents() {
 // ── Server-Sync (gemeinsamer Stand für Coach & Eltern via Cloudflare KV) ──
 const API_BASE = '/api/state';
 
-async function apiPatch(body) {
+async function apiPatch(body, retried = false) {
   try {
-    await fetch(API_BASE, {
+    const res = await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    // Serverseitiger Fehler (z.B. KV-Limit erreicht, 429/5xx) — einmalig verzögert
+    // erneut versuchen, statt die Änderung stillschweigend zu verlieren (lokal ist
+    // sie ja schon gespeichert und würde sonst nie mehr nachgeliefert werden).
+    if (!res.ok && !retried) {
+      setTimeout(() => apiPatch(body, true), 5000);
+    }
   } catch (e) {
     // Offline / Server nicht erreichbar — Änderung bleibt vorerst nur lokal gespeichert
   }
