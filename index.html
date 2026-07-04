@@ -3015,9 +3015,7 @@ function parentSetStatus(eventId, playerId, newStatus) {
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
   expandedParentEventId = null;
-  const page = document.querySelector('.page.active');
-  if (page && page.id === 'page-parent-all') renderParentAll();
-  else renderParentHome();
+  rerenderCurrentPage();
 }
 
 // ============================================================
