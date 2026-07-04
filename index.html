@@ -1904,18 +1904,6 @@ function getNextEvent() {
   return getUpcomingEvents(1)[0] || null;
 }
 
-function getEventWithLatestData() {
-  // Next upcoming event with at least one entry, else most recent past event with entries
-  const hasData = ev => {
-    const ea = state.attendance[ev.id];
-    return ea && PLAYERS.some(p => ea[p.id] && ea[p.id] !== undefined);
-  };
-  return getUpcomingEvents().find(hasData)
-    || getPastEvents().find(hasData)
-    || getNextEvent()
-    || null;
-}
-
 function getNextTraining() {
   const now = new Date();
   return state.events.find(e => e.type === 'training' && new Date(e.date) >= now) || null;
@@ -2130,7 +2118,7 @@ function renderStats() {
     const total = pastTournaments.reduce((sum, ev) => sum + getAttendanceCount(ev.id), 0);
     trmtPct = Math.round(total / (pastTournaments.length * PLAYERS.length) * 100) + '%';
   }
-  const refEv = getEventWithLatestData();
+  const refEv = getNextEvent();
   const fitCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'coming').length : PLAYERS.length;
   const injuredCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'injured').length : 0;
   const absentCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'absent').length : 0;
@@ -2522,7 +2510,7 @@ function renderPlayers(filter = '') {
 
   const pastTrainings = state.events.filter(e => e.type === 'training' && isPast(e.date));
   const pastTournaments = state.events.filter(e => e.type === 'tournament' && isPast(e.date));
-  const refEv = getEventWithLatestData();
+  const refEv = getNextEvent();
   const healthLabels = { coming: ['Fit', 'coming'], injured: ['Verletzt/Krank', 'injured'], absent: ['Abwesend', 'absent'], open: ['Offen', 'open muted'] };
 
   document.getElementById('players-grid').innerHTML = `
