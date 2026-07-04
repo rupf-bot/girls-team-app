@@ -2387,8 +2387,9 @@ function renderTrainingDetail(ev) {
     ${coming.length ? `<div class="player-section-title">Dabei ✓ <span class="player-section-count">${coming.length}</span></div><div>${coming.map(p => playerRow(p, 'coming')).join('')}</div>` : ''}
     ${absent.length ? `<div class="player-section-title">Abwesend ✗ <span class="player-section-count">${absent.length}</span></div><div>${absent.map(p => playerRow(p, 'absent')).join('')}</div>` : ''}
     ${injured.length ? `<div class="player-section-title">Verletzt 🩹 <span class="player-section-count">${injured.length}</span></div><div>${injured.map(p => playerRow(p, 'injured')).join('')}</div>` : ''}
+    ${isCoach ? `
     <div class="player-section-title" style="margin-top:8px">Trainer Team</div>
-    <div>${renderStaffRows(ev)}</div>
+    <div>${renderStaffRows(ev)}</div>` : ''}
   `;
 }
 
@@ -2504,15 +2505,22 @@ function renderTournamentDetail(ev) {
       <div>${injured.map(p => playerRowSimple(p, 'injured')).join('')}</div>` : ''}
     ` : ''}
 
-    <div class="player-section-title" style="margin-top:${isCoach ? '8' : '4'}px">Trainer Team</div>
-    <div>${renderStaffRows(ev)}</div>
+    ${isCoach ? `
+    <div class="player-section-title" style="margin-top:8px">Trainer Team</div>
+    <div>${renderStaffRows(ev)}</div>` : ''}
   `;
 }
 
 function renderStaffRows(ev) {
+  const isCoach = state.currentUser && state.currentUser.role === 'coach';
   return STAFF.filter(s => s.hasAttendance).map(s => {
     const st = getStaffStatus(ev.id, s.id);
     const icon = st === 'coming' ? '✓' : st === 'absent' ? '✗' : '🩹';
+    const toggle = isCoach
+      ? `<button class="status-toggle" onclick="coachCycleStaffStatus(${ev.id}, '${s.id}')">
+        <div class="status-icon ${st}" id="ssi-${ev.id}-${s.id}">${icon}</div>
+      </button>`
+      : `<div class="status-icon ${st}" id="ssi-${ev.id}-${s.id}">${icon}</div>`;
     return `
     <div class="player-row">
       <div class="avatar av-0" style="background:#6B1A2A">${getInitials(s.name)}</div>
@@ -2520,9 +2528,7 @@ function renderStaffRows(ev) {
         <div class="player-name">${s.name}</div>
         <div class="player-sub">${s.role}</div>
       </div>
-      <button class="status-toggle" onclick="coachCycleStaffStatus(${ev.id}, '${s.id}')">
-        <div class="status-icon ${st}" id="ssi-${ev.id}-${s.id}">${icon}</div>
-      </button>
+      ${toggle}
     </div>`;
   }).join('');
 }
