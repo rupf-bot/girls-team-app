@@ -71,7 +71,7 @@
   .page.active {
     opacity: 1;
     pointer-events: all;
-    transform: translateX(0);
+    transform: none;
   }
 
   /* ─── SCROLLABLE CONTENT ─── */
@@ -223,6 +223,7 @@
     align-items: stretch;
     justify-content: flex-start;
     padding: 0;
+    overflow-y: hidden;
   }
   .login-flag-hero {
     width: 100%;
@@ -1218,7 +1219,9 @@
             <button onclick="doLogin()" aria-label="Weiter" style="height:48px;width:48px;padding:0;border-radius:var(--radius-btn);border:none;background:var(--gray-100);color:var(--gray-500);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">→</button>
           </div>
           <div class="form-error" id="login-error" style="margin-top:6px"></div>
-          <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:103px;width:auto;display:block;margin:8px auto 0">
+          <a href="https://svhoengg.ch/" target="_blank" rel="noopener" style="display:block;margin:8px auto 0;width:fit-content">
+            <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:103px;width:auto;display:block">
+          </a>
         </div>
       </div>
     </div>
