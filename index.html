@@ -1649,22 +1649,27 @@ function loadState() {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
   }
-  // Alte, bereits gespeicherte Rückrunde-2027-Events entfernen (Saison vorerst nur Herbstrunde 2026)
-  const cutoff = new Date('2027-01-01T00:00:00');
-  const obsolete = state.events.filter(e => new Date(e.date) >= cutoff);
-  if (obsolete.length) {
-    state.events = state.events.filter(e => new Date(e.date) < cutoff);
-    obsolete.forEach(e => {
-      delete state.attendance[e.id];
-      delete state.squad[e.id];
-      delete state.staffAttendance[e.id];
-      apiPatch({ action: 'deleteEvent', eventId: e.id });
-    });
-  }
+  pruneObsoleteEvents();
   seedPastAttendance();
   seedPastSquad();
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   saveState();
+}
+
+// Alte, bereits gespeicherte Rückrunde-2027-Events entfernen (Saison vorerst nur Herbstrunde 2026).
+// Muss sowohl beim initialen Laden als auch nach jedem Server-Sync laufen, da ein noch nicht
+// bereinigter Serverstand (KV) sonst die lokale Bereinigung wieder überschreiben würde.
+function pruneObsoleteEvents() {
+  const cutoff = new Date('2027-01-01T00:00:00');
+  const obsolete = state.events.filter(e => new Date(e.date) >= cutoff);
+  if (!obsolete.length) return;
+  state.events = state.events.filter(e => new Date(e.date) < cutoff);
+  obsolete.forEach(e => {
+    delete state.attendance[e.id];
+    delete state.squad[e.id];
+    delete state.staffAttendance[e.id];
+    apiPatch({ action: 'deleteEvent', eventId: e.id });
+  });
 }
 
 // ── Server-Sync (gemeinsamer Stand für Coach & Eltern via Cloudflare KV) ──
@@ -1697,6 +1702,7 @@ async function syncFromServer(rerender = true) {
     state.attendance      = data.attendance      || {};
     state.squad           = data.squad           || {};
     state.staffAttendance = data.staffAttendance || {};
+    pruneObsoleteEvents();
     state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
     saveState();
 
