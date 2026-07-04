@@ -8,7 +8,18 @@
 //   sq:<eventId>:<playerId>      → Aufgebot-Status ('in'|'out')
 //   staff:<eventId>:<staffId>    → Staff-Status ('coming'|'absent'|'injured')
 //
+// Zusätzlich wird unter dem Key "full:state" ein aggregierter Cache des kompletten
+// Zustands gepflegt (JSON von {events,attendance,squad,staffAttendance}). Lese-Zugriffe
+// (GET, mehrfach pro Minute durch Polling/Sync auf allen Geräten) lesen nur noch diesen
+// einen Key statt 4x kv.list() + einen kv.get() pro Einzel-Key zu machen — das spart
+// massiv Workers-KV-Operationen (v.a. das knappe List-Kontingent im Free-Tier).
+// Der Cache wird nach jeder schreibenden Aktion neu aus den Einzel-Keys aufgebaut, damit
+// er garantiert konsistent mit der eigentlichen (Einzel-Key-)Quelle bleibt. Schreibvorgänge
+// sind viel seltener als Lesevorgänge, daher lohnt sich der Rebuild-Aufwand dort.
+//
 // Zugriff ist bereits durch functions/_middleware.js (Team-Passwort-Cookie) geschützt.
+
+const CACHE_KEY = 'full:state';
 
 function isFiniteId(v) {
   const n = Number(v);
@@ -26,12 +37,7 @@ async function listAll(kv, prefix) {
   return out;
 }
 
-export async function onRequestGet(context) {
-  const kv = context.env.TEAM_STATE;
-  if (!kv) {
-    return new Response(JSON.stringify({ error: 'KV binding TEAM_STATE fehlt' }), { status: 500 });
-  }
-
+async function buildState(kv) {
   const [evKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
     listAll(kv, 'ev:'),
     listAll(kv, 'att:'),
@@ -68,7 +74,27 @@ export async function onRequestGet(context) {
     staffAttendance[eventId][staffId] = status;
   }));
 
-  return new Response(JSON.stringify({ events, attendance, squad, staffAttendance }), {
+  return { events, attendance, squad, staffAttendance };
+}
+
+async function rebuildCache(kv) {
+  const state = await buildState(kv);
+  await kv.put(CACHE_KEY, JSON.stringify(state));
+  return state;
+}
+
+export async function onRequestGet(context) {
+  const kv = context.env.TEAM_STATE;
+  if (!kv) {
+    return new Response(JSON.stringify({ error: 'KV binding TEAM_STATE fehlt' }), { status: 500 });
+  }
+
+  let state = await kv.get(CACHE_KEY, 'json');
+  if (!state) {
+    state = await rebuildCache(kv);
+  }
+
+  return new Response(JSON.stringify(state), {
     headers: { 'Content-Type': 'application/json' },
   });
 }
@@ -101,6 +127,7 @@ export async function onRequestPost(context) {
     } else {
       await kv.put(key, String(status));
     }
+    await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -110,6 +137,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'event ungültig' }), { status: 400 });
     }
     await kv.put(`ev:${event.id}`, JSON.stringify(event));
+    await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -129,6 +157,7 @@ export async function onRequestPost(context) {
       ...sqKeys.map(k => kv.delete(k.name)),
       ...staffKeys.map(k => kv.delete(k.name)),
     ]);
+    await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -143,6 +172,7 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'events ungültig' }), { status: 400 });
     }
     await Promise.all(events.map(ev => kv.put(`ev:${ev.id}`, JSON.stringify(ev))));
+    await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }
 
