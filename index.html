@@ -42,6 +42,8 @@
 
   html, body {
     height: 100%;
+    width: 100%;
+    overflow-x: hidden;
     background: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
     color: var(--navy);
@@ -203,15 +205,14 @@
     position: fixed;
     top: 0;
     bottom: 0;
-    width: calc((100vw - 480px) / 2);
     background-image: url('Group 62.svg');
     background-size: cover;
     background-position: center;
     z-index: 0;
     display: none;
   }
-  .login-side-art.left { left: 0; }
-  .login-side-art.right { right: 0; }
+  .login-side-art.left { left: 0; right: calc(50% + 240px); }
+  .login-side-art.right { left: calc(50% + 240px); right: 0; }
   @media (min-width: 600px) {
     .login-side-art { display: block; }
   }
