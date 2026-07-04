@@ -1431,7 +1431,7 @@
   <div class="modal-overlay" id="tournament-modal" onclick="closeModalOutside(event)">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <div class="modal-title">Turnier hinzufügen</div>
+      <div class="modal-title" id="tournament-modal-title">Turnier hinzufügen</div>
       <div class="form-group">
         <label class="form-label">Datum</label>
         <input class="form-input" type="date" id="t-date">
@@ -2349,6 +2349,7 @@ function renderTrainingDetail(ev) {
 
 function renderTournamentDetail(ev) {
   const MAX_SQUAD = 10;
+  const isCoach = state.currentUser && state.currentUser.role === 'coach';
   const open    = getOpenPlayers(ev.id);
   const coming  = getComingPlayers(ev.id);
   const absent  = getAbsentPlayers(ev.id);
@@ -2403,6 +2404,7 @@ function renderTournamentDetail(ev) {
       <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
+      ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
     </div>
 
     <div class="squad-header">
@@ -2684,7 +2686,11 @@ function deleteCurrentEvent() {
   showToast(`${label} gelöscht`);
 }
 
+let editingTournamentId = null;
+
 function openAddTournament() {
+  editingTournamentId = null;
+  document.getElementById('tournament-modal-title').textContent = 'Turnier hinzufügen';
   // Set default date to next Sunday
   const d = new Date();
   const daysToSun = (7 - d.getDay()) % 7 || 7;
@@ -2695,8 +2701,21 @@ function openAddTournament() {
   document.getElementById('tournament-modal').classList.add('open');
 }
 
+function openEditTournament(eventId) {
+  const ev = state.events.find(e => e.id === eventId);
+  if (!ev) return;
+  editingTournamentId = eventId;
+  document.getElementById('tournament-modal-title').textContent = 'Turnierdaten anpassen';
+  const d = new Date(ev.date);
+  document.getElementById('t-date').value = d.toISOString().split('T')[0];
+  document.getElementById('t-time').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('t-location').value = ev.location;
+  document.getElementById('tournament-modal').classList.add('open');
+}
+
 function closeTournamentModal() {
   document.getElementById('tournament-modal').classList.remove('open');
+  editingTournamentId = null;
 }
 
 function closeModalOutside(e) {
@@ -2714,6 +2733,22 @@ function saveTournament() {
   }
 
   const dateStr = `${dateVal}T${timeVal}:00`;
+
+  if (editingTournamentId) {
+    const ev = state.events.find(e => e.id === editingTournamentId);
+    if (!ev) { closeTournamentModal(); return; }
+    ev.date = dateStr;
+    ev.location = locVal;
+    state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+    saveState();
+    apiPatch({ action: 'upsertEvent', event: ev });
+    closeTournamentModal();
+    renderCoachEvents();
+    if (currentDetailEventId === ev.id) renderEventDetail(ev);
+    showToast('🏆 Turnierdaten angepasst!');
+    return;
+  }
+
   const newEvent = {
     id: Date.now(),
     type: 'tournament',
