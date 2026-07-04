@@ -1649,6 +1649,10 @@ function loadState() {
     initDefaultAttendance();
   }
   pruneObsoleteEvents();
+  if (!state.events.length) {
+    state.events = [...generateTrainings(), ...generateTournaments()];
+    initDefaultAttendance();
+  }
   seedPastAttendance();
   seedPastSquad();
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -1715,6 +1719,11 @@ async function syncFromServer(rerender = true) {
     state.squad           = data.squad           || {};
     state.staffAttendance = data.staffAttendance || {};
     pruneObsoleteEvents();
+    if (!state.events.length) {
+      state.events = [...generateTrainings(), ...generateTournaments()];
+      initDefaultAttendance();
+      apiPatch({ action: 'bootstrapEvents', events: state.events });
+    }
     state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
     saveState();
 
