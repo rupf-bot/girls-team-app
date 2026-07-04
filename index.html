@@ -1649,6 +1649,18 @@ function loadState() {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
   }
+  // Alte, bereits gespeicherte Rückrunde-2027-Events entfernen (Saison vorerst nur Herbstrunde 2026)
+  const cutoff = new Date('2027-01-01T00:00:00');
+  const obsolete = state.events.filter(e => new Date(e.date) >= cutoff);
+  if (obsolete.length) {
+    state.events = state.events.filter(e => new Date(e.date) < cutoff);
+    obsolete.forEach(e => {
+      delete state.attendance[e.id];
+      delete state.squad[e.id];
+      delete state.staffAttendance[e.id];
+      apiPatch({ action: 'deleteEvent', eventId: e.id });
+    });
+  }
   seedPastAttendance();
   seedPastSquad();
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
