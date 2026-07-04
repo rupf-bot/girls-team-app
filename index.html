@@ -1,0 +1,2917 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SV Höngg · Juniorinnen Ema</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand: #92CEFF;
+    --brand-dark: #1A6DB5;
+    --brand-light: #E8F4FF;
+    --brand-blue: #2563EB;
+    --brand-blue-mid: #3B82F6;
+    --bordeaux: #6B1A2A;
+    --bordeaux-light: #F5E8EA;
+    --teal: #259FAD;
+    --green: #22C55E;
+    --green-dark: #16A34A;
+    --green-light: #DCFCE7;
+    --navy: #0F172A;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-150: #FFFFFF;
+    --page-bg: #F3F3F3;
+    --gray-200: #E2E8F0;
+    --gray-500: #64748B;
+    --red: #EF4444;
+    --red-light: #FEE2E2;
+    --blue: var(--brand-blue-mid);
+    --blue-light: #DBEAFE;
+    --orange: #F97316;
+    --orange-light: #FFEDD5;
+    --radius-card: 16px;
+    --radius-btn: 12px;
+    --shadow: 0 2px 12px rgba(15,23,42,0.08);
+    --shadow-lg: 0 8px 32px rgba(15,23,42,0.12);
+    --nav-height: 72px;
+    --header-height: 60px;
+  }
+
+  html, body {
+    height: 100%;
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+    color: var(--navy);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--page-bg);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ─── PAGE SYSTEM ─── */
+  .page {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    transform: translateX(12px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+    position: relative;
+  }
+
+  /* ─── SCROLLABLE CONTENT ─── */
+  .scroll-content {
+    padding-bottom: calc(var(--nav-height) + 16px);
+  }
+  .scroll-content-parent {
+    padding-bottom: calc(var(--nav-height) + 24px);
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: var(--page-bg);
+    border-bottom: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .header-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brand-blue-mid);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .header-back svg { width: 20px; height: 20px; }
+
+  /* ─── BOTTOM NAV ─── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    height: var(--nav-height);
+    background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);
+    border-top: none;
+    display: flex;
+    z-index: 20;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+    color: rgba(255,255,255,0.6);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 8px 4px;
+  }
+  .nav-item.active { color: white; }
+  .nav-item:hover { color: white; }
+  .nav-item svg { width: 24px; height: 24px; }
+  .nav-item span { font-size: 11px; }
+
+  /* ─── PARENT HOME ─── */
+  .home-flag-hero {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .home-flag-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+  }
+  .home-flag-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, white);
+  }
+  .home-stat-card {
+    background: var(--gray-150);
+    border-radius: var(--radius-card);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-stat-card:hover { background: var(--gray-100); }
+  .home-stat-card:active { transform: scale(0.98); }
+  .home-stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-500); margin-bottom: 6px; }
+  .home-stat-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .home-stat-count { font-size: 22px; font-weight: 800; color: var(--navy); }
+  .home-stat-of { font-size: 13px; color: var(--gray-500); font-weight: 600; }
+  .home-stat-bar { height: 6px; background: var(--gray-200); border-radius: 99px; overflow: hidden; }
+  .home-stat-fill-training { height: 100%; background: var(--brand); border-radius: 99px; transition: width 0.4s ease; }
+  .home-stat-fill-tournament { height: 100%; background: var(--orange); border-radius: 99px; transition: width 0.4s ease; }
+
+  /* ─── LOGIN PAGE ─── */
+  .login-side-art {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: calc((100vw - 480px) / 2);
+    background-image: url('Group 62.svg');
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+    display: none;
+  }
+  .login-side-art.left { left: 0; }
+  .login-side-art.right { right: 0; }
+  @media (min-width: 600px) {
+    .login-side-art { display: block; }
+  }
+  #page-login {
+    background: var(--page-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 0;
+  }
+  .login-flag-hero {
+    width: 100%;
+    height: 210px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .login-flag-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+  }
+  .login-flag-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, #fff);
+  }
+  .login-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 24px 32px;
+  }
+  .login-logo { margin-bottom: 32px; line-height: 1; margin-top: 16px; }
+  .login-logo img { height: 104px; width: auto; display: block; margin: 0 auto; }
+  .login-title { font-size: 32px; font-weight: 800; color: var(--navy); margin-bottom: 4px; letter-spacing: -0.5px; }
+  .login-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
+  .login-cards { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 360px; }
+  .login-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+  }
+  .login-card:active { transform: scale(0.97); }
+  .login-card.selected { border-color: var(--brand-blue-mid); }
+  .login-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 0; }
+  .login-card-icon { font-size: 32px; }
+  .login-card-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .login-card-desc { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+  .login-card-body { margin-top: 16px; display: none; }
+  .login-card.selected .login-card-body { display: block; }
+
+  .form-input {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-btn);
+    padding: 0 14px;
+    font-size: 15px;
+    background: var(--gray-50);
+    color: var(--navy);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .form-input:focus { border-color: var(--brand-blue-mid); background: white; }
+  .form-select {
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-btn);
+    padding: 0 14px;
+    font-size: 15px;
+    background: var(--gray-50);
+    color: var(--navy);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  .form-select:focus { border-color: var(--brand-blue-mid); background-color: white; }
+  .form-select.has-value { font-weight: 700; color: var(--brand-blue-mid); }
+  .form-textarea {
+    width: 100%;
+    min-height: 72px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--radius-btn);
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--gray-50);
+    color: var(--navy);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
+  .form-textarea:focus { border-color: var(--brand-blue-mid); background: white; }
+  .plan-block-card {
+    background: var(--gray-150);
+    border-radius: var(--radius-card);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    height: 52px;
+    border-radius: var(--radius-btn);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--brand);
+    color: #1a1a1a;
+    box-shadow: 0 4px 16px rgba(146,206,255,0.50);
+    margin-top: 12px;
+  }
+  .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(146,206,255,0.40); }
+  .btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    margin-top: 8px;
+  }
+  .btn-secondary:active { transform: scale(0.97); }
+  .btn-danger {
+    background: var(--red-light);
+    color: var(--red);
+  }
+  .btn-sm {
+    height: 36px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 16px;
+    width: auto;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  .form-error {
+    font-size: 13px;
+    color: var(--red);
+    margin-top: 8px;
+    text-align: center;
+    min-height: 20px;
+  }
+
+  /* ─── COACH HOME ─── */
+  .section-padding { padding: 20px 20px 0; }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  .hero-card {
+    margin: 16px 20px 0;
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .hero-card.training-hero { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%); }
+  .hero-card.tournament-hero { background: linear-gradient(135deg, var(--bordeaux) 0%, #9B2335 100%); }
+  .hero-card::before {
+    content: '';
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .hero-card::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    bottom: -30px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    width: fit-content;
+    margin-bottom: 8px;
+  }
+  .hero-date { font-size: 20px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 2px; }
+  .hero-location { font-size: 13px; opacity: 0.85; margin-bottom: 12px; }
+  .hero-attendance {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-attendance-text { font-size: 15px; font-weight: 700; }
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin: 0 20px;
+  }
+  .stat-card {
+    background: var(--gray-150);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-value { font-size: 22px; font-weight: 800; color: var(--navy); }
+  .stat-label { font-size: 11px; color: var(--gray-500); margin-top: 2px; line-height: 1.3; font-weight: 500; }
+
+  /* ─── EVENT LIST ITEM ─── */
+  .event-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    margin: 0 12px 8px;
+    background: var(--gray-150);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .event-item.past { opacity: 0.5; cursor: default; }
+  .event-date-col { text-align: center; min-width: 48px; }
+  .event-date-day { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1; }
+  .event-date-month { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
+  .event-date-weekday { font-size: 10px; font-weight: 600; color: var(--brand-dark); margin-top: 3px; }
+  .event-info { flex: 1; min-width: 0; }
+  .event-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-bottom: 3px;
+  }
+  .badge-training { background: var(--blue-light); color: var(--blue); }
+  .badge-tournament { background: var(--orange-light); color: var(--orange); }
+  .event-name { font-size: 15px; font-weight: 700; color: var(--navy); }
+  .event-meta { font-size: 13px; color: var(--gray-500); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .event-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .attendance-pill {
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--green-light);
+    color: var(--green-dark);
+  }
+  .attendance-pill.low { background: var(--red-light); color: var(--red); }
+  .chevron { color: var(--gray-200); }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex;
+    padding: 0 20px;
+    gap: 6px;
+    margin: 16px 0 0;
+  }
+  .tab-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-500);
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn.active { color: var(--brand-blue-mid); border-bottom-color: var(--brand-blue-mid); }
+
+  /* ─── FAB ─── */
+  .fab {
+    position: fixed;
+    bottom: calc(var(--nav-height) + 16px);
+    right: max(16px, calc(50vw - 224px));
+    width: 56px;
+    height: 56px;
+    background: var(--brand);
+    border-radius: 50%;
+    border: none;
+    color: #1a1a1a;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(34,197,94,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 15;
+  }
+  .fab:active { transform: scale(0.92); box-shadow: 0 2px 10px rgba(34,197,94,0.3); }
+
+  /* ─── EVENT DETAIL ─── */
+  .detail-info-card {
+    background: var(--gray-150);
+    border-radius: var(--radius-card);
+    padding: 18px;
+    margin: 16px 20px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .detail-info-item label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--gray-500);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .detail-info-item span { font-size: 15px; font-weight: 600; color: var(--navy); }
+
+  .attendance-big {
+    text-align: center;
+    padding: 24px 20px 20px;
+  }
+  .attendance-number { font-size: 52px; font-weight: 900; color: var(--navy); line-height: 1; }
+  .attendance-denom { font-size: 22px; color: var(--gray-500); font-weight: 600; }
+  .attendance-label { font-size: 14px; color: var(--gray-500); margin-top: 6px; }
+  .attendance-progress {
+    height: 8px;
+    background: var(--gray-100);
+    border-radius: 4px;
+    margin: 12px 20px 0;
+    overflow: hidden;
+  }
+  .attendance-progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  .player-section-title {
+    padding: 20px 20px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-section-count {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 2px 8px;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 0.12s;
+  }
+  .player-row:last-child { border-bottom: none; }
+  .player-row:active { background: var(--gray-50); }
+
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .player-name { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .player-sub { font-size: 13px; color: var(--gray-500); }
+
+  .status-toggle {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    padding: 6px;
+    border-radius: 8px;
+    transition: transform 0.15s;
+  }
+  .status-toggle:active { transform: scale(0.9); }
+  .status-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  .status-icon.open    { background: var(--gray-100); color: var(--gray-500); }
+  .status-icon.coming  { background: var(--green-light); color: var(--green-dark); }
+  .status-icon.absent  { background: var(--red-light); color: var(--red); }
+  .status-icon.injured { background: var(--orange-light); color: var(--orange); }
+
+  /* ─── PLAYERS GRID ─── */
+  .players-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  .player-card {
+    background: var(--gray-50);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .player-card .avatar { width: 52px; height: 52px; font-size: 16px; }
+  .player-card-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .player-card-parent { font-size: 12px; color: var(--gray-500); }
+  .player-card-phone { font-size: 13px; font-weight: 600; color: var(--brand-blue); text-decoration: none; }
+  .contact-box { transition: background 0.15s; cursor: pointer; }
+  .contact-box:hover { background: var(--blue-light) !important; }
+
+  .search-input-wrap {
+    padding: 12px 20px;
+    position: relative;
+  }
+  .search-input {
+    width: 100%;
+    height: 44px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 0 14px 0 40px;
+    font-size: 15px;
+    background: var(--gray-50);
+    color: var(--navy);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--brand-blue-mid); background: white; }
+  .search-icon {
+    position: absolute;
+    left: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--gray-500);
+  }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal-sheet {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 24px 40px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .modal-overlay.open .modal-sheet {
+    transform: translateY(0);
+  }
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .modal-actions .btn { flex: 1; }
+
+  /* ─── PARENT HOME ─── */
+  .parent-header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .parent-greeting { font-size: 26px; font-weight: 800; color: var(--navy); }
+  .parent-greeting span { color: var(--brand-dark); }
+  .parent-sub { font-size: 14px; color: var(--gray-500); margin-top: 2px; }
+  .logout-btn {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .parent-hero-card {
+    margin: 0 20px;
+    border-radius: 20px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .parent-hero-card.open-hero      { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%); }
+  .parent-hero-card.coming-hero    { background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%); }
+  .parent-hero-card.absent-hero    { background: linear-gradient(135deg, #DC2626 0%, var(--red) 100%); }
+  .parent-hero-card.injured-hero   { background: linear-gradient(135deg, #C2410C 0%, var(--orange) 100%); }
+  .parent-hero-card.tournament-hero { background: linear-gradient(135deg, var(--bordeaux) 0%, #9B2335 100%); }
+  .parent-hero-card.training-hero   { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%); }
+  .parent-hero-card::before {
+    content: '';
+    position: absolute;
+    right: -20px; top: -20px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+  }
+  .parent-hero-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
+  .parent-hero-event { font-size: 20px; font-weight: 800; color: white; margin-bottom: 2px; }
+  .parent-hero-date { font-size: 14px; color: rgba(255,255,255,0.85); margin-bottom: 16px; }
+  .parent-status-text {
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .parent-toggle-btn {
+    height: 48px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .parent-toggle-btn.to-absent { background: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(8px); }
+  .parent-toggle-btn.to-coming { background: rgba(255,255,255,0.2); color: white; backdrop-filter: blur(8px); }
+  .parent-toggle-btn:active { transform: scale(0.97); }
+  .parent-status-btns { display: flex; gap: 8px; margin-top: 14px; }
+  .parent-status-btn { flex: 1; padding: 10px 4px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(8px); transition: all 0.15s; }
+  .parent-status-btn.active { background: rgba(255,255,255,0.9); color: var(--navy); border-color: transparent; }
+  .parent-status-btn:active { transform: scale(0.95); }
+
+  /* Attendance bar — hero */
+  .hero-attendance { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2); }
+  .hero-attendance-text { font-size: 13px; color: rgba(255,255,255,0.9); font-weight: 600; margin-bottom: 6px; }
+  .hero-attendance-bar { height: 6px; background: rgba(255,255,255,0.25); border-radius: 3px; overflow: hidden; }
+  .hero-attendance-fill { height: 100%; background: white; border-radius: 3px; transition: width 0.6s ease; }
+
+  /* Attendance bar — event list */
+  .event-attendance { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+  .event-attendance-bar { flex: 1; height: 4px; background: var(--gray-200); border-radius: 2px; overflow: hidden; }
+  .event-attendance-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+  .event-attendance-fill.training { background: var(--green); }
+  .event-attendance-fill.tournament { background: var(--orange); }
+  .event-attendance-label { font-size: 11px; font-weight: 700; color: var(--gray-500); white-space: nowrap; }
+
+  .parent-event-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 14px 16px;
+    margin: 0 12px 8px;
+    background: var(--gray-150);
+    border-radius: 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .parent-event-item.past { opacity: 0.5; }
+  .parent-event-item .expand-chevron { color: var(--gray-500); transition: transform 0.2s; }
+  .parent-event-item.expanded .expand-chevron { transform: rotate(180deg); }
+  .list-status-btns { width: 100%; display: flex; gap: 8px; }
+  .list-status-btn {
+    flex: 1;
+    padding: 10px 4px;
+    border-radius: 10px;
+    border: 2px solid var(--gray-200);
+    background: white;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .list-status-btn:active { transform: scale(0.95); }
+  .list-status-btn.coming.active  { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  .list-status-btn.absent.active  { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .list-status-btn.injured.active { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 3px 10px;
+  }
+  .status-badge.open    { background: var(--orange-light); color: var(--orange); }
+  .status-badge.open.muted { background: var(--gray-100); color: var(--gray-500); }
+
+  .header-child-badge {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--brand-blue);
+  }
+  .header-child-badge:empty { display: none; }
+
+  .tab-add-btn {
+    padding: 10px 0 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand-blue);
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-add-btn.open { color: var(--navy); }
+  .fab-options {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    position: absolute;
+    top: 40px; left: 0;
+    z-index: 50;
+  }
+  .fab-option {
+    border: none;
+    border-radius: 24px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .status-badge.coming  { background: var(--green-light); color: var(--green-dark); }
+  .status-badge.absent  { background: var(--red-light); color: var(--red); }
+  .status-badge.injured { background: var(--orange-light); color: var(--orange); }
+
+  .parent-event-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ─── SECTION LABEL ─── */
+  .section-label {
+    padding: 20px 20px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+  }
+
+  /* ─── AVATAR COLORS ─── */
+  .av-0 { background: #8B5CF6; }
+  .av-1 { background: #EC4899; }
+  .av-2 { background: #F97316; }
+  .av-3 { background: #06B6D4; }
+  .av-4 { background: #22C55E; }
+  .av-5 { background: #EAB308; }
+  .av-6 { background: #EF4444; }
+  .av-7 { background: #3B82F6; }
+  .av-8 { background: #10B981; }
+  .av-9 { background: #F43F5E; }
+
+  /* ─── EMPTY STATE ─── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--gray-500);
+  }
+  .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 16px; font-weight: 600; }
+  .empty-state-sub { font-size: 14px; margin-top: 4px; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: calc(var(--nav-height) + 16px);
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--navy);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 50px;
+    white-space: nowrap;
+    z-index: 100;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── PAST EVENTS DIVIDER ─── */
+  .past-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 8px;
+  }
+  .past-divider span { font-size: 12px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+  .past-divider hr { flex: 1; border: none; border-top: 1px solid var(--gray-200); }
+
+  /* ─── DETAIL TYPE HERO ─── */
+  .detail-type-banner {
+    margin: 16px 20px 0;
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .detail-type-banner.training { background: var(--blue-light); }
+  .detail-type-banner.tournament { background: var(--orange-light); }
+  .detail-type-banner-icon { font-size: 28px; }
+  .detail-type-banner-title { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .detail-type-banner-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .training .detail-type-banner-badge { color: var(--blue); }
+  .tournament .detail-type-banner-badge { color: var(--orange); }
+
+  /* ─── SCROLLABLE LIST WRAPPER ─── */
+
+  /* ─── FOOTER ─── */
+  .list-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 13px;
+    color: var(--gray-500);
+  }
+
+  /* ─── SQUAD SELECTION (TOURNAMENT) ─── */
+  .squad-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 8px;
+  }
+  .squad-counter {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .squad-counter-num {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--navy);
+  }
+  .squad-counter-num.full { color: var(--green-dark); }
+  .squad-counter-num.over { color: var(--red); }
+  .squad-player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .squad-player-row:last-child { border-bottom: none; }
+  .squad-player-info { flex: 1; min-width: 0; }
+  .squad-player-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .squad-player-meta { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+  .benched-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--orange-light);
+    color: var(--orange);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--blue-light);
+    color: var(--brand-dark);
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 1px 6px;
+  }
+  .squad-btns { display: flex; gap: 6px; }
+  .squad-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 2px solid var(--gray-200);
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .squad-btn:active { transform: scale(0.92); }
+  .squad-btn.in { background: var(--green-light); border-color: var(--green); }
+  .squad-btn.out { background: var(--red-light); border-color: var(--red); }
+  .squad-section {
+    background: white;
+    border-radius: var(--radius-card);
+    margin: 0 16px 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .squad-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    padding: 12px 20px 4px;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .parent-squad-badge {
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin-top: 4px;
+    display: inline-block;
+  }
+  .parent-squad-badge.in { background: var(--green-light); color: var(--green-dark); }
+  .parent-squad-badge.out { background: var(--red-light); color: var(--red); }
+  .parent-squad-badge.pending { background: var(--blue-light); color: var(--brand-dark); }
+
+  /* ─── PULSE ANIMATION FOR TOGGLE ─── */
+  @keyframes pulse-scale {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  .animate-pulse { animation: pulse-scale 0.25s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="login-side-art left"></div>
+<div class="login-side-art right"></div>
+<div id="app">
+
+  <!-- LOGIN -->
+  <div id="page-login" class="page active">
+    <div class="login-content" style="padding-top:48px;position:relative;z-index:1">
+      <div class="login-logo"><img src="Group 61 (1).svg" alt="Ema"></div>
+      <div class="login-cards">
+        <div class="login-card selected" id="parent-card">
+          <div class="login-card-header">
+            <div class="login-card-icon">⚽</div>
+            <div>
+              <div class="login-card-title">Juniorinnen Ema</div>
+            </div>
+          </div>
+          <div class="login-card-body">
+            <select class="form-select" id="child-select" onchange="this.classList.toggle('has-value', !!this.value)">
+              <option value="">Name wählen...</option>
+            </select>
+            <button class="btn btn-primary" onclick="doParentLogin()" style="margin-top:12px;background:var(--brand-blue-mid);color:white;box-shadow:0 4px 16px rgba(59,130,246,0.40)">Weiter</button>
+          </div>
+        </div>
+        <div id="coach-card" style="padding:16px 4px 0">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-500);margin-bottom:10px">Coach-Login</div>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="password" id="coach-pw" placeholder="Passwort" oninput="clearError()" onkeydown="if(event.key==='Enter')doLogin()" style="flex:1">
+            <button onclick="doLogin()" style="height:48px;padding:0 20px;border-radius:var(--radius-btn);border:none;background:var(--gray-100);color:var(--gray-500);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap">Login</button>
+          </div>
+          <div class="form-error" id="login-error" style="margin-top:6px"></div>
+          <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:72px;width:auto;display:block;margin:8px auto 0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COACH HOME -->
+  <div id="page-coach-home" class="page">
+    <div class="header">
+      <div class="header-child-badge"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="scroll-content">
+      <div class="section-label">Statistik</div>
+      <div class="stats-row" id="coach-stats"></div>
+      <div class="section-label">Event hinzufügen</div>
+      <div style="padding:0 20px 4px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="openAddTraining()" style="position:relative;display:flex;flex-direction:column;gap:8px;background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);border:none;border-radius:14px;padding:16px 14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">
+          <div style="position:absolute;top:10px;right:10px;width:24px;height:24px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:white;line-height:1">+</div>
+          <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">⚽</div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:white;line-height:1.2">Training <span style="font-weight:800">hinzufügen</span></div>
+          </div>
+        </button>
+        <button onclick="openAddTournament()" style="position:relative;display:flex;flex-direction:column;gap:8px;background:var(--bordeaux);border:none;border-radius:14px;padding:16px 14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">
+          <div style="position:absolute;top:10px;right:10px;width:24px;height:24px;background:rgba(255,255,255,0.22);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:white;line-height:1">+</div>
+          <div style="width:36px;height:36px;background:rgba(255,255,255,0.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px">🏆</div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:white;line-height:1.2">Turnier <span style="font-weight:800">hinzufügen</span></div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COACH EVENTS -->
+  <div id="page-coach-events" class="page">
+    <div class="header">
+      <div class="header-child-badge"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="tabs" style="align-items:center">
+      <button class="tab-btn active" onclick="filterEvents('all', this)">Alle</button>
+      <button class="tab-btn" onclick="filterEvents('training', this)">Training</button>
+      <button class="tab-btn" onclick="filterEvents('tournament', this)">Turnier</button>
+      <div style="position:relative">
+        <button class="tab-add-btn" id="fab-main" onclick="toggleFab(event)" title="Event hinzufügen">+ Neu</button>
+        <div class="fab-options" id="fab-options" style="display:none">
+          <button onclick="closeFab();openAddTraining()" class="fab-option" style="background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%)">⚽ Training</button>
+          <button onclick="closeFab();openAddTournament()" class="fab-option" style="background:var(--bordeaux)">🏆 Turnier</button>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-content" id="coach-events-list" style="padding-top:12px"></div>
+  </div>
+
+  <!-- COACH TRAINING -->
+  <!-- COACH EVENT DETAIL -->
+  <div id="page-event-detail" class="page">
+    <div class="header">
+      <button class="header-back" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Zurück
+      </button>
+      <div id="detail-header-title" style="font-size:15px;font-weight:700"></div>
+      <button id="detail-delete-btn" onclick="deleteCurrentEvent()" style="background:none;border:none;padding:8px;cursor:pointer;color:var(--red);display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </div>
+    <div class="scroll-content" id="event-detail-content"></div>
+  </div>
+
+  <!-- COACH PLAYERS -->
+  <div id="page-coach-players" class="page">
+    <div class="header">
+      <div class="header-child-badge"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="Name suchen..." oninput="filterPlayers(this.value)">
+    </div>
+    <div id="available-numbers" style="margin:0 16px 10px;padding:10px 14px;background:var(--blue-light);border-radius:12px;font-size:13px;font-weight:600;color:var(--navy)"></div>
+    <div id="players-grid"></div>
+    <div class="list-footer" id="players-footer"></div>
+  </div>
+
+  <!-- PARENT HOME -->
+  <div id="page-parent-home" class="page">
+    <div class="header">
+      <div id="parent-home-name" style="font-size:17px;font-weight:800;color:var(--brand-blue)"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="scroll-content-parent">
+      <!-- 1. Next event: primary action -->
+      <div class="section-label">Nächster Event</div>
+      <div id="parent-home-hero"></div>
+      <!-- 2. Season attendance: visible without scrolling -->
+      <div class="section-label">Anwesenheit diese Saison</div>
+      <div style="padding:0 20px" id="parent-home-stats"></div>
+      <div style="height:100px"></div>
+    </div>
+  </div>
+
+  <!-- PARENT ALL EVENTS -->
+  <div id="page-parent-all" class="page">
+    <div class="header">
+      <div class="header-child-badge"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="filterParentEvents('all', this)">Alle</button>
+      <button class="tab-btn" onclick="filterParentEvents('training', this)">Training</button>
+      <button class="tab-btn" onclick="filterParentEvents('tournament', this)">Turnier</button>
+    </div>
+    <div class="scroll-content-parent" id="parent-all-list" style="padding-top:12px"></div>
+  </div>
+
+  <!-- PARENT TEAM -->
+  <div id="page-parent-team" class="page">
+    <div class="header">
+      <div class="header-child-badge"></div>
+      <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
+        <img src="SVH-Logo-transparent.svg" alt="SV Höngg" style="height:32px;width:auto">
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+      </div>
+    </div>
+    <div class="search-input-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="Name suchen..." oninput="filterParentTeam(this.value)">
+    </div>
+    <div class="scroll-content-parent">
+      <div class="section-label">Spielerinnen</div>
+      <div id="parent-team-players" style="padding:0 16px;display:flex;flex-direction:column;gap:6px"></div>
+      <div class="section-label">Trainer Team</div>
+      <div id="parent-team-staff" style="padding:0 16px;display:flex;flex-direction:column;gap:8px;padding-bottom:100px"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV (Coach) -->
+  <nav class="bottom-nav" id="parent-nav" style="display:none">
+    <button class="nav-item active" onclick="parentNav('home', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="parentNav('events', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Events</span>
+    </button>
+    <button class="nav-item" onclick="parentNav('team', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Team</span>
+    </button>
+  </nav>
+
+  <nav class="bottom-nav" id="coach-nav" style="display:none">
+    <button class="nav-item active" onclick="coachNav('home', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="coachNav('events', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Events</span>
+    </button>
+    <button class="nav-item" onclick="coachNav('players', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Team</span>
+    </button>
+  </nav>
+
+  <!-- ADD TRAINING MODAL -->
+  <div class="modal-overlay" id="training-modal" onclick="closeTrainingModalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Training hinzufügen</div>
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input class="form-input" type="date" id="tr-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Uhrzeit</label>
+        <input class="form-input" type="time" id="tr-time" value="17:30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ort / Adresse</label>
+        <input class="form-input" type="text" id="tr-location" placeholder="z. B. Sportanlage Hönggerberg">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeTrainingModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveTraining()" style="margin-top:0">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD TOURNAMENT MODAL -->
+  <div class="modal-overlay" id="tournament-modal" onclick="closeModalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Turnier hinzufügen</div>
+      <div class="form-group">
+        <label class="form-label">Datum</label>
+        <input class="form-input" type="date" id="t-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Uhrzeit</label>
+        <input class="form-input" type="time" id="t-time" value="09:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ort / Adresse</label>
+        <input class="form-input" type="text" id="t-location" placeholder="z. B. Sportanlage Hönggerberg">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeTournamentModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveTournament()" style="margin-top:0">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINING PLAN MODAL -->
+  <div class="modal-overlay" id="training-plan-modal" onclick="closeTrainingPlanModalOutside(event)">
+    <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Trainingsplan</div>
+      <div class="form-group">
+        <label class="form-label">Material</label>
+        <input class="form-input" type="text" id="tp-material" placeholder="z. B. Bälle, Leibchen, Minitore">
+      </div>
+      <div id="tp-blocks"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeTrainingPlanModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveTrainingPlan()" style="margin-top:0">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA MODEL
+// ============================================================
+
+const PLAYERS = [
+  { id: 1,  name: 'Emilia Bajunovic',       parent: 'Familie Bajunovic',     phone: '077 412 67 92', nameMother: 'Maja',      phone2: '076 375 16 66', nameFather: 'Danijel', number: 12 },
+  { id: 3,  name: 'Marley Büeler',          parent: 'Familie Büeler',        phone: '078 766 19 00', nameMother: 'Corinne',   phone2: '078 858 57 17', nameFather: 'Marcel', number: 24 },
+  { id: 4,  name: 'Kaia Burger',            parent: 'Familie Burger',        phone: '076 407 95 16', nameMother: 'Karolina',  phone2: '079 637 08 61', nameFather: 'Irwan', number: 20 },
+  { id: 5,  name: 'Billie Clavadetscher',   parent: 'Familie Clavadetscher', phone: '076 427 02 22', nameMother: 'N.',        phone2: '079 217 94 06', nameFather: 'Claude Liechti', number: 29 },
+  { id: 6,  name: 'Liva Forster',           parent: 'Familie Forster',       phone: '079 319 57 77', nameMother: 'Patricia Lanz', phone2: '079 287 30 01', nameFather: 'Christian', number: 9 },
+  { id: 7,  name: 'Noelia Hrodek',          parent: 'Familie Hrodek',        phone: '076 419 17 07', nameMother: 'Andrea',    phone2: '078 927 55 36', nameFather: 'M. Wälte', number: 15 },
+  { id: 8,  name: 'Thalia Amalie Hujic',    parent: 'Familie Hujic',         phone: '079 317 42 26', nameMother: 'Kata' },
+  { id: 9,  name: 'Maileen Ita',            parent: 'Familie Ita',           phone: '079 284 67 11', phone2: '078 803 11 26', nameFather: 'Michael' },
+  { id: 10, name: 'Mathilda Jäger',         parent: 'Familie Jäger',         phone: '076 496 40 60', nameMother: 'Anna',      phone2: '076 341 97 95', nameFather: 'Konrad', number: 4 },
+  { id: 11, name: 'Jula Keller',            parent: 'Familie Keller',        phone: '076 320 01 06', nameMother: 'Sonja Morichetti', number: 16 },
+  { id: 12, name: 'Quinn Kull',             parent: 'Familie Kull',          phone: '079 579 13 32', nameMother: 'Denise', number: 3 },
+  { id: 13, name: 'Freya Nuri Küpfer',      parent: 'Familie Küpfer',        phone: '078 916 88 90', nameMother: 'Simone',    phone2: '079 377 48 26', nameFather: 'Adrian Oertli' },
+  { id: 14, name: 'Arina Locherer',         parent: 'Familie Locherer',      phone: '079 511 51 88', phone2: '076 583 32 84', number: 28 },
+  { id: 15, name: 'Giorgia Marini',         parent: 'Familie Marini',        phone: '079 415 82 54', nameMother: 'Guya',      phone2: '079 765 76 35', nameFather: 'Alex' },
+  { id: 16, name: 'Elyne Meyer',            parent: 'Familie Meyer',         phone: '079 459 12 49', nameMother: 'Pat',       phone2: '076 420 21 85', number: 7 },
+  { id: 17, name: 'Lea Lina Rupf',          parent: 'Familie Rupf',          phone: '079 420 99 65', nameMother: 'Simone Eder', number: 26 },
+  { id: 18, name: 'Rea Salzmann',           parent: 'Familie Salzmann',      phone: '078 699 64 55', nameMother: 'Tina',      phone2: '079 416 98 52', number: 8 },
+  { id: 19, name: 'Greta Thom',             parent: 'Familie Thom',          phone: '079 550 96 10', nameMother: 'Lisa',      phone2: '076 263 33 44', nameFather: 'Patrick' },
+  { id: 20, name: 'Yael Zogg',              parent: 'Familie Zogg',          phone: '079 361 10 86', nameMother: 'Tatjana', number: 21 },
+];
+
+const STAFF = [
+  { id: 's1', name: 'Marcel Rupf',  role: 'Trainer',              phone: '079 245 78 71', hasAttendance: true, photo: 'marcel-portrait.jpg' },
+  { id: 's2', name: 'Irwan Burger', role: 'Trainer',              phone: '079 637 08 61', hasAttendance: true },
+  { id: 's3', name: 'Kilian Fanger', role: 'Chef Frauenabteilung', phone: '079 382 36 32', hasAttendance: false },
+];
+
+const TRAINING_PLAN_BLOCKS = [
+  { key: 'einleitung', label: 'Einleitung',  defaultDuration: 15 },
+  { key: 'hauptteilA', label: 'Hauptteil A', defaultDuration: 25 },
+  { key: 'hauptteilB', label: 'Hauptteil B', defaultDuration: 20 },
+  { key: 'ausklang',   label: 'Ausklang',    defaultDuration: 5  },
+];
+
+const DE_DAYS       = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+const DE_DAYS_FULL  = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const DE_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const DE_MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+
+// ── Season simulation ──
+// Die Saison ist grösstenteils gespielt: 20 vergangene Trainings + 4 kommende,
+// 4 vergangene Turniere + 2 kommende.
+function generateTrainings() {
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(start.getDate() - 12 * 7);
+  start.setHours(0, 0, 0, 0);
+  // Alle Mi/Fr 17:30 im Fenster -12 bis +4 Wochen
+  const dates = [];
+  for (let i = 0; i < 16 * 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (d.getDay() === 3 || d.getDay() === 5) {
+      d.setHours(17, 30, 0, 0);
+      dates.push(d);
+    }
+  }
+  const past   = dates.filter(d => d < now).slice(-20);
+  const future = dates.filter(d => d >= now).slice(0, 4);
+  let id = 100;
+  return [...past, ...future].map(d => ({
+    id: id++,
+    type: 'training',
+    date: d.toISOString(),
+    location: 'Sportanlage Hönggerberg',
+    title: 'Training',
+  }));
+}
+
+function generateTournaments() {
+  const now = new Date();
+  const base = new Date(now);
+  base.setHours(0, 0, 0, 0);
+  const toSun = (7 - base.getDay()) % 7;
+  const nextSun = new Date(base);
+  nextSun.setDate(base.getDate() + (toSun === 0 ? 7 : toSun));
+  // Wochen relativ zum nächsten Sonntag: 4 vergangene, 2 kommende Turniere
+  const offsets = [-11, -8, -5, -2, 0, 3];
+  const locs = ['Sportanlage Hönggerberg', 'Feld Heerenschürli, Zürich', 'Sportplatz Juchhof, Zürich', 'Sportanlage Hönggerberg', 'Sportanlage Hönggerberg', 'Feld Heerenschürli, Zürich'];
+  return offsets.map((w, i) => {
+    const d = new Date(nextSun);
+    d.setDate(nextSun.getDate() + w * 7);
+    d.setHours(i % 2 ? 10 : 9, 0, 0, 0);
+    return { id: 200 + i, type: 'tournament', date: d.toISOString(), location: locs[i], title: 'Turnier' };
+  });
+}
+
+// Anwesenheitsquote pro Spielerin (Index = playerId - 1), bewusst unterschiedlich
+const SIM_RATES = [0.95, 0.9, 0.55, 0.85, 0.75, 0.9, 0.5, 0.8, 0.95, 0.65, 0.45, 0.7, 0.85, 0.6, 0.9, 0.75, 0.55, 0.8, 0.7, 0.4];
+
+// Deterministischer Pseudozufall, damit die Simulation über Reloads stabil bleibt
+function seededRand(a, b) {
+  const x = Math.sin(a * 374761 + b * 668265) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+function seedPastAttendance() {
+  state.events.filter(e => isPast(e.date)).forEach(ev => {
+    if (!state.attendance[ev.id]) state.attendance[ev.id] = {};
+    PLAYERS.forEach(p => {
+      if (state.attendance[ev.id][p.id] !== undefined) return;
+      const r = seededRand(ev.id, p.id);
+      const rate = SIM_RATES[p.id - 1];
+      state.attendance[ev.id][p.id] = r < rate ? 'coming' : (r < rate + 0.08 ? 'injured' : 'absent');
+    });
+  });
+}
+
+// Aufgebote für vergangene Turniere: von den Angemeldeten spielen max. 10,
+// der Rest wird trotz Anmeldung nicht aufgeboten ('out')
+function seedPastSquad() {
+  state.events.filter(e => e.type === 'tournament' && isPast(e.date)).forEach(ev => {
+    if (!state.squad[ev.id]) state.squad[ev.id] = {};
+    const registered = PLAYERS.filter(p => getStatus(ev.id, p.id) === 'coming');
+    const ranked = [...registered].sort((a, b) => seededRand(ev.id * 7, a.id) - seededRand(ev.id * 7, b.id));
+    ranked.forEach((p, i) => {
+      if (state.squad[ev.id][p.id] === undefined) state.squad[ev.id][p.id] = i < 10 ? 'in' : 'out';
+    });
+  });
+
+  // Demo-Feinschliff: Mia Schweizer (4) spielt genau eines ihrer angemeldeten Turniere
+  const miaId = 4;
+  const regTours = state.events.filter(e => e.type === 'tournament' && isPast(e.date) && getStatus(e.id, miaId) === 'coming');
+  if (regTours.length && getSquadInCount(miaId) === 0) {
+    const ev = regTours[0];
+    const swap = PLAYERS.find(p => p.id !== miaId && state.squad[ev.id][p.id] === 'in');
+    if (swap) state.squad[ev.id][swap.id] = 'out';
+    state.squad[ev.id][miaId] = 'in';
+  }
+}
+
+// ── State ──
+let state = {
+  currentUser: null,   // { role: 'coach' | 'parent', playerId }
+  events: [],
+  attendance: {},      // { eventId: { playerId: 'coming'|'absent'|'injured' } }
+  squad: {},           // { eventId: { playerId: 'in'|'out' } } — tournament only
+  nextId: 300,
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('girlsfc_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Version 3 = Saison-Simulation; ältere Stände werden verworfen und neu generiert
+      if (parsed.stateVersion === 3) {
+        state.events     = parsed.events     || [];
+        state.attendance = parsed.attendance || {};
+        state.squad      = parsed.squad      || {};
+        state.nextId     = parsed.nextId     || 300;
+      }
+    }
+  } catch(e) {}
+
+  if (!state.events.length) {
+    state.events = [...generateTrainings(), ...generateTournaments()];
+    initDefaultAttendance();
+  }
+  seedPastAttendance();
+  seedPastSquad();
+  state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+  saveState();
+}
+
+function saveState() {
+  localStorage.setItem('girlsfc_state', JSON.stringify({
+    stateVersion: 3,
+    events: state.events,
+    attendance: state.attendance,
+    squad: state.squad,
+    nextId: state.nextId,
+  }));
+}
+
+function initDefaultAttendance() {
+  state.events.forEach(ev => initEventAttendance(ev.id));
+}
+
+function initEventAttendance(eventId) {
+  if (!state.attendance[eventId]) {
+    state.attendance[eventId] = {};
+    // No default — all players start as 'open' (undefined)
+  }
+}
+
+// ── Helpers ──
+function getStatus(eventId, playerId) {
+  const ea = state.attendance[eventId];
+  if (!ea || ea[playerId] === undefined || ea[playerId] === null) return 'open';
+  const v = ea[playerId];
+  // backwards compat: true → coming, false → absent
+  if (v === true) return 'coming';
+  if (v === false) return 'absent';
+  return v; // 'open', 'coming', 'absent', 'injured'
+}
+
+function isAttending(eventId, playerId) {
+  return getStatus(eventId, playerId) === 'coming';
+}
+
+function cycleStatus(eventId, playerId) {
+  if (!state.attendance[eventId]) state.attendance[eventId] = {};
+  const current = getStatus(eventId, playerId);
+  // open → coming → absent → injured → open
+  const next = current === 'open' ? 'coming' : current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'open';
+  // store 'open' as undefined (clean state)
+  if (next === 'open') delete state.attendance[eventId][playerId];
+  else state.attendance[eventId][playerId] = next;
+  saveState();
+  return next;
+}
+
+function toggleAttendance(eventId, playerId) {
+  if (!state.attendance[eventId]) {
+    state.attendance[eventId] = {};
+    // No default — players start as 'open'
+  }
+  const current = getStatus(eventId, playerId);
+  state.attendance[eventId][playerId] = current === 'coming' ? 'absent' : 'coming';
+  saveState();
+}
+
+function getAttendanceCount(eventId) {
+  return PLAYERS.filter(p => getStatus(eventId, p.id) === 'coming').length;
+}
+
+// ── Squad helpers (tournament only) ──
+function getSquadStatus(eventId, playerId) {
+  return (state.squad[eventId] && state.squad[eventId][playerId]) || null;
+}
+function setSquadStatus(eventId, playerId, status) {
+  if (!state.squad[eventId]) state.squad[eventId] = {};
+  if (state.squad[eventId][playerId] === status) {
+    delete state.squad[eventId][playerId]; // toggle off
+  } else {
+    state.squad[eventId][playerId] = status;
+  }
+  saveState();
+}
+function getSquadCount(eventId) {
+  if (!state.squad[eventId]) return 0;
+  return PLAYERS.filter(p => state.squad[eventId][p.id] === 'in').length;
+}
+function getBenchedCount(playerId) {
+  // Past tournaments where player registered (coming) but coach set out
+  return state.events.filter(e =>
+    e.type === 'tournament' && isPast(e.date) &&
+    getStatus(e.id, playerId) === 'coming' &&
+    getSquadStatus(e.id, playerId) === 'out'
+  ).length;
+}
+function getSquadInCount(playerId) {
+  // Past tournaments where player was in squad
+  return state.events.filter(e =>
+    e.type === 'tournament' && isPast(e.date) &&
+    getSquadStatus(e.id, playerId) === 'in'
+  ).length;
+}
+
+function getOpenPlayers(eventId) {
+  return PLAYERS.filter(p => getStatus(eventId, p.id) === 'open');
+}
+function getComingPlayers(eventId) {
+  return PLAYERS.filter(p => getStatus(eventId, p.id) === 'coming');
+}
+
+function getAbsentPlayers(eventId) {
+  return PLAYERS.filter(p => getStatus(eventId, p.id) === 'absent');
+}
+
+function getInjuredPlayers(eventId) {
+  return PLAYERS.filter(p => getStatus(eventId, p.id) === 'injured');
+}
+
+function getStaffStatus(eventId, staffId) {
+  const ea = state.staffAttendance && state.staffAttendance[eventId];
+  if (!ea || ea[staffId] === undefined) return 'coming';
+  return ea[staffId];
+}
+
+function cycleStaffStatus(eventId, staffId) {
+  if (!state.staffAttendance) state.staffAttendance = {};
+  if (!state.staffAttendance[eventId]) {
+    state.staffAttendance[eventId] = {};
+    STAFF.filter(s => s.hasAttendance).forEach(s => state.staffAttendance[eventId][s.id] = 'coming');
+  }
+  const current = getStaffStatus(eventId, staffId);
+  const next = current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'coming';
+  state.staffAttendance[eventId][staffId] = next;
+  saveState();
+  return next;
+}
+
+// ── Date Formatting ──
+function parseDate(dateStr) {
+  return new Date(dateStr);
+}
+
+function formatDateLong(dateStr) {
+  const d = parseDate(dateStr);
+  return `${DE_DAYS[d.getDay()]}, ${d.getDate()}. ${DE_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function formatDateShort(dateStr) {
+  const d = parseDate(dateStr);
+  return `${DE_DAYS[d.getDay()]}, ${d.getDate()}. ${DE_MONTHS[d.getMonth()]}`;
+}
+
+function formatTime(dateStr) {
+  const d = parseDate(dateStr);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function formatDateMini(dateStr) {
+  const d = parseDate(dateStr);
+  return { day: d.getDate(), month: DE_MONTHS_SHORT[d.getMonth()], weekday: DE_DAYS_FULL[d.getDay()] };
+}
+
+function isPast(dateStr) {
+  return new Date(dateStr) < new Date();
+}
+
+function isLockedForParent(dateStr) {
+  return new Date(dateStr) - new Date() < 5 * 60 * 60 * 1000;
+}
+
+function getUpcomingEvents(limit = null) {
+  const now = new Date();
+  const upcoming = state.events.filter(e => new Date(e.date) >= now);
+  return limit ? upcoming.slice(0, limit) : upcoming;
+}
+
+function getPastEvents() {
+  const now = new Date();
+  return state.events.filter(e => new Date(e.date) < now).reverse();
+}
+
+function getNextEvent() {
+  return getUpcomingEvents(1)[0] || null;
+}
+
+function getEventWithLatestData() {
+  // Next upcoming event with at least one entry, else most recent past event with entries
+  const hasData = ev => {
+    const ea = state.attendance[ev.id];
+    return ea && PLAYERS.some(p => ea[p.id] && ea[p.id] !== undefined);
+  };
+  return getUpcomingEvents().find(hasData)
+    || getPastEvents().find(hasData)
+    || getNextEvent()
+    || null;
+}
+
+function getNextTraining() {
+  const now = new Date();
+  return state.events.find(e => e.type === 'training' && new Date(e.date) >= now) || null;
+}
+
+function getNextTournament() {
+  const now = new Date();
+  return state.events.find(e => e.type === 'tournament' && new Date(e.date) >= now) || null;
+}
+
+// ── Avatar ──
+function getInitials(name) {
+  const parts = name.split(' ');
+  return parts.length >= 2 ? parts[0][0] + parts[1][0] : name[0];
+}
+
+function getAvatarClass(idx) {
+  return `av-${idx % 10}`;
+}
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// ROUTING
+// ============================================================
+
+let pageHistory = [];
+let currentPage = 'page-login';
+let currentFilter = 'all';
+
+function showPage(pageId, pushHistory = true) {
+  if (pushHistory && currentPage !== pageId) pageHistory.push(currentPage);
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  if (target) target.classList.add('active');
+  currentPage = pageId;
+  target.scrollTop = 0;
+
+  // Show/hide nav
+  const nav = document.getElementById('coach-nav');
+  const coachPages = ['page-coach-home','page-coach-events','page-coach-players'];
+  nav.style.display = coachPages.includes(pageId) ? 'flex' : 'none';
+
+  // Render
+  if (pageId === 'page-coach-home')    renderCoachHome();
+  if (pageId === 'page-coach-events')  renderCoachEvents();
+  if (pageId === 'page-coach-players') renderPlayers();
+  if (pageId === 'page-parent-home')   renderParentHome();
+  if (pageId === 'page-parent-all')    { renderParentAll(); syncNavActive('page-parent-all'); }
+  if (pageId === 'page-parent-home')   syncNavActive('page-parent-home');
+  if (pageId === 'page-parent-team')   { renderParentTeam(); syncNavActive('page-parent-team'); }
+}
+
+function goBack() {
+  if (pageHistory.length > 0) {
+    const prev = pageHistory.pop();
+    showPage(prev, false);
+  }
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+function selectRole(role) {
+  document.getElementById('coach-card').classList.toggle('selected', role === 'coach');
+  document.getElementById('parent-card').classList.toggle('selected', role === 'parent');
+  if (role === 'coach') document.getElementById('coach-pw').focus();
+  if (role === 'parent') document.getElementById('child-select').focus();
+  clearError();
+}
+
+function clearError() {
+  document.getElementById('login-error').textContent = '';
+}
+
+function saveSession() {
+  if (state.currentUser) {
+    localStorage.setItem('girlsfc_session', JSON.stringify(state.currentUser));
+  } else {
+    localStorage.removeItem('girlsfc_session');
+  }
+}
+
+function doLogin() {
+  const pw = document.getElementById('coach-pw').value;
+  if (pw === 'coach') {
+    state.currentUser = { role: 'coach' };
+    saveSession();
+    updateChildBadge();
+    showPage('page-coach-home');
+    document.getElementById('coach-nav').style.display = 'flex';
+    syncNavActive('page-coach-home');
+  } else {
+    document.getElementById('login-error').textContent = 'Falsches Passwort';
+  }
+}
+
+function doParentLogin() {
+  const sel = document.getElementById('child-select');
+  const playerId = parseInt(sel.value);
+  if (!playerId) {
+    sel.style.borderColor = 'var(--red)';
+    setTimeout(() => sel.style.borderColor = '', 1000);
+    return;
+  }
+  state.currentUser = { role: 'parent', playerId };
+  saveSession();
+  updateChildBadge();
+  expandedParentEventId = null;
+  document.getElementById('parent-nav').style.display = 'flex';
+  showPage('page-parent-home');
+  syncNavActive('page-parent-home');
+}
+
+function updateChildBadge() {
+  let name = '';
+  if (state.currentUser && state.currentUser.role === 'parent') {
+    const player = PLAYERS.find(p => p.id === state.currentUser.playerId);
+    if (player) name = player.name.split(' ')[0];
+  } else if (state.currentUser && state.currentUser.role === 'coach') {
+    name = 'Coach';
+  }
+  document.querySelectorAll('.header-child-badge').forEach(el => { el.textContent = name; });
+}
+
+function doLogout() {
+  state.currentUser = null;
+  saveSession();
+  document.getElementById('coach-pw').value = '';
+  document.getElementById('child-select').value = '';
+  document.getElementById('coach-nav').style.display = 'none';
+  document.getElementById('parent-nav').style.display = 'none';
+  showPage('page-login', false);
+  pageHistory = [];
+}
+
+function populateChildSelect() {
+  const sel = document.getElementById('child-select');
+  PLAYERS.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+}
+
+// ============================================================
+// COACH NAVIGATION
+// ============================================================
+
+function coachNav(section, btn) {
+  document.querySelectorAll('#coach-nav .nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  const pages = { home: 'page-coach-home', events: 'page-coach-events', players: 'page-coach-players' };
+  showPage(pages[section], false);
+}
+
+function parentNav(section, btn) {
+  document.querySelectorAll('#parent-nav .nav-item').forEach(n => n.classList.remove('active'));
+  btn.classList.add('active');
+  const pages = { home: 'page-parent-home', events: 'page-parent-all', team: 'page-parent-team' };
+  showPage(pages[section], false);
+}
+
+function syncNavActive(pageId) {
+  const coachMap = { 'page-coach-home': 0, 'page-coach-events': 1, 'page-coach-players': 2 };
+  const parentMap = { 'page-parent-home': 0, 'page-parent-all': 1, 'page-parent-team': 2 };
+  if (coachMap[pageId] !== undefined) {
+    document.querySelectorAll('#coach-nav .nav-item').forEach((n,i) => n.classList.toggle('active', i === coachMap[pageId]));
+  }
+  if (parentMap[pageId] !== undefined) {
+    document.querySelectorAll('#parent-nav .nav-item').forEach((n,i) => n.classList.toggle('active', i === parentMap[pageId]));
+  }
+}
+
+// ============================================================
+// COACH HOME RENDER
+// ============================================================
+
+function renderCoachHome() {
+  syncNavActive('page-coach-home');
+  renderStats();
+}
+
+function renderStats() {
+  const past = getPastEvents();
+  const pastTrainings = past.filter(e => e.type === 'training');
+  const pastTournaments = past.filter(e => e.type === 'tournament');
+  let trnPct = '–', trmtPct = '–';
+  if (pastTrainings.length) {
+    const total = pastTrainings.reduce((sum, ev) => sum + getAttendanceCount(ev.id), 0);
+    trnPct = Math.round(total / (pastTrainings.length * PLAYERS.length) * 100) + '%';
+  }
+  if (pastTournaments.length) {
+    const total = pastTournaments.reduce((sum, ev) => sum + getAttendanceCount(ev.id), 0);
+    trmtPct = Math.round(total / (pastTournaments.length * PLAYERS.length) * 100) + '%';
+  }
+  const refEv = getEventWithLatestData();
+  const injuredCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'injured').length : 0;
+  const absentCount  = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'absent').length : 0;
+  const availableCount = PLAYERS.length - injuredCount - absentCount;
+  document.getElementById('coach-stats').innerHTML = `
+    <div class="stat-card" style="background:var(--gray-150)">
+      <div class="stat-value">${refEv ? availableCount : PLAYERS.length}</div>
+      <div class="stat-label">Spielerinnen fit</div>
+    </div>
+    <div class="stat-card" style="${injuredCount > 0 ? 'background:var(--red-light)' : ''}">
+      <div class="stat-value" style="${injuredCount > 0 ? 'color:var(--red)' : ''}">${injuredCount}</div>
+      <div class="stat-label">Verletzt / Krank</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,var(--brand-blue) 0%,var(--brand-blue-mid) 100%)">
+      <div class="stat-value" style="color:white">${trnPct}</div>
+      <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Training</div>
+    </div>
+    <div class="stat-card" style="background:linear-gradient(135deg,var(--bordeaux) 0%,#9B2335 100%)">
+      <div class="stat-value" style="color:white">${trmtPct}</div>
+      <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Turnier</div>
+    </div>`;
+}
+
+function renderRecentEvents() {
+  const upcoming = getPastEvents ? getUpcomingEvents() : [];
+  const past = getPastEvents ? getPastEvents() : [];
+  const container = document.getElementById('coach-recent-events');
+  let html = '';
+  if (upcoming.length) html += upcoming.map(ev => renderEventItem(ev, true)).join('');
+  if (past.length) {
+    html += `<div class="past-divider"><hr><span>Vergangene Events</span><hr></div>`;
+    html += past.map(ev => renderEventItem(ev, false, true)).join('');
+  }
+  if (!html) html = '<div class="empty-state"><div class="empty-state-text">Keine Events</div></div>';
+  html += '<div style="height:24px"></div>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+// COACH EVENTS RENDER
+// ============================================================
+
+function filterEvents(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCoachEvents();
+}
+
+function toggleFab(e) {
+  e.stopPropagation();
+  const opts = document.getElementById('fab-options');
+  const open = opts.style.display === 'none';
+  opts.style.display = open ? 'flex' : 'none';
+  document.getElementById('fab-main').classList.toggle('open', open);
+}
+
+function closeFab() {
+  document.getElementById('fab-options').style.display = 'none';
+  document.getElementById('fab-main').classList.remove('open');
+}
+document.addEventListener('click', closeFab);
+
+function renderCoachEvents() {
+  syncNavActive('page-coach-events');
+  const now = new Date();
+  let upcoming = getUpcomingEvents().filter(ev => currentFilter === 'all' || ev.type === currentFilter);
+  let past     = getPastEvents().filter(ev => currentFilter === 'all' || ev.type === currentFilter);
+
+  let html = '';
+  if (upcoming.length) {
+    html += upcoming.map(ev => renderEventItem(ev, true)).join('');
+  }
+  if (past.length) {
+    html += `<div class="past-divider"><hr><span>Vergangene Events</span><hr></div>`;
+    html += past.map(ev => renderEventItem(ev, false, true)).join('');
+  }
+  if (!upcoming.length && !past.length) {
+    html = '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine Events</div></div>';
+  }
+  document.getElementById('coach-events-list').innerHTML = html;
+}
+
+function renderEventItem(ev, clickable = true, isPastEv = false) {
+  const count = getAttendanceCount(ev.id);
+  const isTrn = ev.type === 'training';
+  const { day, month, weekday } = formatDateMini(ev.date);
+  const maxCount = isTrn ? PLAYERS.length : 10;
+  const pct = Math.round(Math.min(count, maxCount) / maxCount * 100);
+  const pastClass = isPastEv ? 'past' : '';
+  const clickHandler = clickable && !isPastEv ? `onclick="openEventDetail(${ev.id})"` : '';
+  return `
+    <div class="event-item ${pastClass}" ${clickHandler}>
+      <div class="event-date-col">
+        <div class="event-date-day">${day}</div>
+        <div class="event-date-month">${month}</div>
+        <div class="event-date-weekday">${weekday}</div>
+      </div>
+      <div class="event-info">
+        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+        <div class="event-name">${formatTime(ev.date)} Uhr</div>
+        <div class="event-meta">📍 ${ev.location}</div>
+        ${!isPastEv ? `<div class="event-attendance">
+          <div class="event-attendance-bar"><div class="event-attendance-fill ${ev.type}" style="width:${pct}%"></div></div>
+          <div class="event-attendance-label">${count}/${maxCount}</div>
+        </div>` : ''}
+      </div>
+      <div class="event-right">
+        ${!isPastEv ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" class="chevron"><polyline points="9 18 15 12 9 6"/></svg>' : ''}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// EVENT DETAIL
+// ============================================================
+
+let currentDetailEventId = null;
+
+function openEventDetail(eventId) {
+  currentDetailEventId = parseInt(eventId);
+  const ev = state.events.find(e => e.id === currentDetailEventId);
+  if (!ev) return;
+  showPage('page-event-detail');
+  renderEventDetail(ev);
+}
+
+function renderEventDetail(ev) {
+  const isTrn = ev.type === 'training';
+  document.getElementById('detail-header-title').textContent = isTrn ? 'Training' : 'Turnier';
+  const isCoach = state.currentUser && state.currentUser.role === 'coach';
+  const deleteBtn = document.getElementById('detail-delete-btn');
+  if (deleteBtn) deleteBtn.style.display = isCoach ? 'flex' : 'none';
+
+  if (isTrn) {
+    renderTrainingDetail(ev);
+  } else {
+    renderTournamentDetail(ev);
+  }
+}
+
+function renderTrainingDetail(ev) {
+  const open    = getOpenPlayers(ev.id);
+  const coming  = getComingPlayers(ev.id);
+  const absent  = getAbsentPlayers(ev.id);
+  const injured = getInjuredPlayers(ev.id);
+  const count   = coming.length;
+  const pct     = Math.round(count / PLAYERS.length * 100);
+  const isCoach = state.currentUser && state.currentUser.role === 'coach';
+
+  const planBlocks   = (ev.plan && ev.plan.blocks) || [];
+  const filledBlocks = planBlocks.filter(b => b.text && b.text.trim());
+  const hasPlan      = filledBlocks.length > 0;
+
+  let planSection = '';
+  if (isCoach || hasPlan) {
+    planSection = `
+    <div class="section-padding" style="margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="section-title" style="margin-bottom:0">Trainingsplan</div>
+        ${isCoach ? `<button onclick="openTrainingPlan(${ev.id})" style="background:none;border:none;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0">${hasPlan ? 'Bearbeiten' : '+ Erstellen'}</button>` : ''}
+      </div>
+      ${hasPlan ? `
+        ${ev.plan.material ? `<div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">📦 ${ev.plan.material}</div>` : ''}
+        ${filledBlocks.map(b => `
+          <div class="plan-block-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+              <div style="font-size:13px;font-weight:800;color:var(--navy)">${b.label}</div>
+              ${b.duration ? `<div style="font-size:12px;font-weight:700;color:var(--gray-500)">${b.duration}'</div>` : ''}
+            </div>
+            <div style="font-size:14px;color:var(--navy);white-space:pre-wrap;line-height:1.4">${b.text}</div>
+          </div>`).join('')}
+      ` : `<div style="font-size:14px;color:var(--gray-500)">Noch kein Trainingsplan erstellt.</div>`}
+    </div>`;
+  }
+
+  function playerRow(p, status) {
+    const icon = status === 'open' ? '?' : status === 'coming' ? '✓' : status === 'absent' ? '✗' : '🩹';
+    const tooltip = status === 'open' ? 'Weiter: Dabei' : status === 'coming' ? 'Weiter: Abwesend' : status === 'absent' ? 'Weiter: Verletzt' : 'Weiter: Offen';
+    return `
+    <div class="player-row">
+      <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
+      <div>
+        <div class="player-name">${p.name}</div>
+      </div>
+      <button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})" title="${tooltip}">
+        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
+      </button>
+    </div>`;
+  }
+
+  document.getElementById('event-detail-content').innerHTML = `
+    <div class="detail-type-banner training">
+      <div class="detail-type-banner-icon">⚽</div>
+      <div>
+        <div class="detail-type-banner-badge">Training</div>
+        <div class="detail-type-banner-title">${formatDateShort(ev.date)}</div>
+      </div>
+    </div>
+    <div class="detail-info-card">
+      <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
+      <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
+      <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
+    </div>
+    ${planSection}
+    <div class="attendance-big">
+      <div><span class="attendance-number">${count}</span><span class="attendance-denom"> / ${PLAYERS.length}</span></div>
+      <div class="attendance-label">Spielerinnen dabei</div>
+    </div>
+    <div class="attendance-progress">
+      <div class="attendance-progress-fill" style="width:${pct}%"></div>
+    </div>
+    ${open.length ? `<div class="player-section-title" style="color:var(--gray-500)">Keine Rückmeldung ? <span class="player-section-count">${open.length}</span></div><div>${open.map(p => playerRow(p, 'open')).join('')}</div>` : ''}
+    ${coming.length ? `<div class="player-section-title">Dabei ✓ <span class="player-section-count">${coming.length}</span></div><div>${coming.map(p => playerRow(p, 'coming')).join('')}</div>` : ''}
+    ${absent.length ? `<div class="player-section-title">Abwesend ✗ <span class="player-section-count">${absent.length}</span></div><div>${absent.map(p => playerRow(p, 'absent')).join('')}</div>` : ''}
+    ${injured.length ? `<div class="player-section-title">Verletzt 🩹 <span class="player-section-count">${injured.length}</span></div><div>${injured.map(p => playerRow(p, 'injured')).join('')}</div>` : ''}
+    <div class="player-section-title" style="margin-top:8px">Trainer Team</div>
+    <div>${renderStaffRows(ev)}</div>
+  `;
+}
+
+function renderTournamentDetail(ev) {
+  const MAX_SQUAD = 10;
+  const open    = getOpenPlayers(ev.id);
+  const coming  = getComingPlayers(ev.id);
+  const absent  = getAbsentPlayers(ev.id);
+  const injured = getInjuredPlayers(ev.id);
+  const squadCount = getSquadCount(ev.id);
+  const counterClass = squadCount > MAX_SQUAD ? 'over' : squadCount === MAX_SQUAD ? 'full' : '';
+
+  // Sort coming players: benched first (priority), then by name
+  const comingSorted = [...coming].sort((a, b) => getBenchedCount(b.id) - getBenchedCount(a.id));
+
+  function squadPlayerRow(p) {
+    const sqSt = getSquadStatus(ev.id, p.id);
+    const benched = getBenchedCount(p.id);
+    const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× ausgelassen</span>` : '';
+    return `
+    <div class="squad-player-row">
+      <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${getInitials(p.name)}</div>
+      <div class="squad-player-info">
+        <div class="squad-player-name">${p.name}</div>
+        <div class="squad-player-meta">${p.parent}${benchedBadge ? ' · ' + benchedBadge : ''}</div>
+      </div>
+      <div class="squad-btns">
+        <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
+        <button class="squad-btn ${sqSt === 'out' ? 'out' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'out')" title="Nicht berücksichtigt">✗</button>
+      </div>
+    </div>`;
+  }
+
+  function playerRowSimple(p, status) {
+    const icon = status === 'open' ? '?' : status === 'absent' ? '✗' : '🩹';
+    return `
+    <div class="player-row">
+      <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
+      <div>
+        <div class="player-name">${p.name}</div>
+      </div>
+      <button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})">
+        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
+      </button>
+    </div>`;
+  }
+
+  document.getElementById('event-detail-content').innerHTML = `
+    <div class="detail-type-banner tournament">
+      <div class="detail-type-banner-icon">🏆</div>
+      <div>
+        <div class="detail-type-banner-badge">Turnier</div>
+        <div class="detail-type-banner-title">${formatDateShort(ev.date)}</div>
+      </div>
+    </div>
+    <div class="detail-info-card">
+      <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
+      <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
+      <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
+    </div>
+
+    <div class="squad-header">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-500)">Aufgebot</div>
+        <div><span class="squad-counter-num ${counterClass}">${squadCount}</span><span style="font-size:14px;color:var(--gray-500);font-weight:600"> / ${MAX_SQUAD}</span></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-500)">Anmeldungen</div>
+        <div style="font-size:20px;font-weight:800;color:var(--navy)">${coming.length}</div>
+      </div>
+    </div>
+
+    ${coming.length ? `
+      <div class="squad-section">
+        <div class="squad-section-title">Angemeldet · ${coming.length} Mädchen${coming.length > MAX_SQUAD ? ` · <span style="color:var(--orange)">${coming.length - MAX_SQUAD} zu viele</span>` : ''}</div>
+        ${comingSorted.map(p => squadPlayerRow(p)).join('')}
+      </div>` : '<div class="empty-state" style="padding:20px"><div class="empty-state-text">Noch keine Anmeldungen</div></div>'}
+
+    ${open.length ? `
+      <div class="player-section-title" style="color:var(--gray-500)">Keine Rückmeldung ? <span class="player-section-count">${open.length}</span></div>
+      <div>${open.map(p => playerRowSimple(p, 'open')).join('')}</div>` : ''}
+    ${absent.length ? `
+      <div class="player-section-title">Abwesend ✗ <span class="player-section-count">${absent.length}</span></div>
+      <div>${absent.map(p => playerRowSimple(p, 'absent')).join('')}</div>` : ''}
+    ${injured.length ? `
+      <div class="player-section-title">Verletzt 🩹 <span class="player-section-count">${injured.length}</span></div>
+      <div>${injured.map(p => playerRowSimple(p, 'injured')).join('')}</div>` : ''}
+
+    <div class="player-section-title" style="margin-top:8px">Trainer Team</div>
+    <div>${renderStaffRows(ev)}</div>
+  `;
+}
+
+function renderStaffRows(ev) {
+  return STAFF.filter(s => s.hasAttendance).map(s => {
+    const st = getStaffStatus(ev.id, s.id);
+    const icon = st === 'coming' ? '✓' : st === 'absent' ? '✗' : '🩹';
+    return `
+    <div class="player-row">
+      <div class="avatar av-0" style="background:#6B1A2A">${getInitials(s.name)}</div>
+      <div>
+        <div class="player-name">${s.name}</div>
+        <div class="player-sub">${s.role}</div>
+      </div>
+      <button class="status-toggle" onclick="coachCycleStaffStatus(${ev.id}, '${s.id}')">
+        <div class="status-icon ${st}" id="ssi-${ev.id}-${s.id}">${icon}</div>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function coachSetSquad(eventId, playerId, status) {
+  setSquadStatus(eventId, playerId, status);
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderTournamentDetail(ev);
+  const squadCount = getSquadCount(eventId);
+  showToast(status === 'in' ? `✓ Im Aufgebot (${squadCount}/10)` : `✗ Nicht berücksichtigt`);
+}
+
+function coachCycleStatus(eventId, playerId) {
+  const next = cycleStatus(eventId, playerId);
+  const icon = document.getElementById(`si-${eventId}-${playerId}`);
+  if (icon) {
+    icon.classList.add('animate-pulse');
+    setTimeout(() => icon.classList.remove('animate-pulse'), 250);
+  }
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderEventDetail(ev);
+  const msg = next === 'coming' ? '✓ Dabei markiert' : next === 'absent' ? '✗ Abwesend markiert' : next === 'injured' ? '🩹 Verletzt markiert' : '? Status zurückgesetzt';
+  showToast(msg);
+}
+
+function coachCycleStaffStatus(eventId, staffId) {
+  const next = cycleStaffStatus(eventId, staffId);
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderEventDetail(ev);
+  const msg = next === 'coming' ? '✓ Dabei markiert' : next === 'absent' ? '✗ Abwesend markiert' : next === 'injured' ? '🩹 Verletzt markiert' : '? Status zurückgesetzt';
+  showToast(msg);
+}
+
+// ============================================================
+// PLAYERS
+// ============================================================
+
+let playerFilter = '';
+
+function renderPlayers(filter = '') {
+  syncNavActive('page-coach-players');
+  const usedNumbers = PLAYERS.map(p => p.number).filter(Boolean);
+  const freeNumbers = [];
+  for (let n = 1; n <= 30; n++) { if (!usedNumbers.includes(n)) freeNumbers.push(n); }
+  document.getElementById('available-numbers').textContent = 'Freie Trikotnummern (1-30): ' + freeNumbers.join(', ');
+  const filtered = PLAYERS.filter(p =>
+    p.name.toLowerCase().includes(filter.toLowerCase()) ||
+    p.parent.toLowerCase().includes(filter.toLowerCase()) ||
+    (p.nameMother && p.nameMother.toLowerCase().includes(filter.toLowerCase())) ||
+    (p.nameFather && p.nameFather.toLowerCase().includes(filter.toLowerCase()))
+  );
+
+  const staffFiltered = STAFF.filter(s =>
+    s.name.toLowerCase().includes(filter.toLowerCase()) ||
+    s.role.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  const pastTrainings = state.events.filter(e => e.type === 'training' && isPast(e.date));
+  const pastTournaments = state.events.filter(e => e.type === 'tournament' && isPast(e.date));
+
+  document.getElementById('players-grid').innerHTML = `
+    <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px">
+      ${filtered.map(p => {
+        const trn = pastTrainings.filter(e => getStatus(e.id, p.id) === 'coming').length;
+        const trnPct = pastTrainings.length ? Math.round(trn / pastTrainings.length * 100) : 0;
+        const played = getSquadInCount(p.id);
+        return `
+        <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:10px 14px">
+          <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div class="player-name">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
+            <div style="display:flex;flex-direction:column;gap:2px;margin-top:2px">
+              <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
+              ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <span style="font-size:14px;font-weight:700;color:var(--brand-blue)">⚽ ${trn}/${pastTrainings.length} (${trnPct} %)</span>
+            <span style="font-size:14px;font-weight:700;color:var(--bordeaux)">🏆 ${played}/${pastTournaments.length}</span>
+          </div>
+        </div>`;}).join('')}
+    </div>
+    ${staffFiltered.length ? `
+    <div class="player-section-title" style="padding:20px 20px 10px">Trainer Team</div>
+    <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:8px">
+      ${staffFiltered.map(s => `
+        <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:12px 14px">
+          <div class="avatar" style="width:42px;height:42px;font-size:14px;font-weight:800;background:${s.photo ? `url('${s.photo}') center/cover` : '#6B1A2A'};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.photo ? '' : getInitials(s.name)}</div>
+          <div style="flex:1">
+            <div class="player-name">${s.name}</div>
+            <div class="player-sub">${s.role}</div>
+          </div>
+          <a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>
+        </div>`).join('')}
+    </div>` : ''}`;
+  document.getElementById('players-footer').textContent = `${filtered.length} von ${PLAYERS.length} Spielerinnen`;
+}
+
+function filterPlayers(val) {
+  playerFilter = val;
+  renderPlayers(val);
+}
+
+// ============================================================
+// ADD TOURNAMENT
+// ============================================================
+
+function openAddTraining() {
+  const d = new Date();
+  // Default to next Wednesday (day 3) or Friday (day 5)
+  const day = d.getDay();
+  const daysToWed = (3 - day + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysToWed);
+  document.getElementById('tr-date').value = d.toISOString().split('T')[0];
+  document.getElementById('tr-time').value = '17:30';
+  document.getElementById('tr-location').value = 'Sportanlage Hönggerberg';
+  document.getElementById('training-modal').classList.add('open');
+}
+
+function closeTrainingModal() {
+  document.getElementById('training-modal').classList.remove('open');
+}
+
+function closeTrainingModalOutside(e) {
+  if (e.target.id === 'training-modal') closeTrainingModal();
+}
+
+function saveTraining() {
+  const dateVal = document.getElementById('tr-date').value;
+  const timeVal = document.getElementById('tr-time').value;
+  const locVal  = document.getElementById('tr-location').value.trim();
+
+  if (!dateVal || !timeVal || !locVal) {
+    showToast('Bitte alle Felder ausfüllen');
+    return;
+  }
+
+  const dateStr = `${dateVal}T${timeVal}:00`;
+  const newEvent = {
+    id: state.nextId++,
+    type: 'training',
+    date: dateStr,
+    location: locVal,
+    title: 'Training',
+  };
+  state.events.push(newEvent);
+  state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+  initEventAttendance(newEvent.id);
+  saveState();
+  closeTrainingModal();
+  renderCoachEvents();
+  showToast('⚽ Training gespeichert!');
+}
+
+function openTrainingPlan(eventId) {
+  const ev = state.events.find(e => e.id === eventId);
+  if (!ev) return;
+  currentDetailEventId = eventId;
+
+  document.getElementById('tp-material').value = (ev.plan && ev.plan.material) || '';
+
+  const blocksHtml = TRAINING_PLAN_BLOCKS.map((def, i) => {
+    const saved = ev.plan && ev.plan.blocks && ev.plan.blocks.find(b => b.key === def.key);
+    const duration = saved ? saved.duration : def.defaultDuration;
+    const text     = saved ? saved.text : '';
+    return `
+    <div class="form-group">
+      <label class="form-label">${def.label}</label>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <input class="form-input" type="number" min="0" id="tp-dur-${i}" value="${duration}" style="width:90px">
+        <span style="font-size:13px;color:var(--gray-500);font-weight:600">Minuten</span>
+      </div>
+      <textarea class="form-textarea" id="tp-text-${i}" placeholder="Übung / Ablauf">${text}</textarea>
+    </div>`;
+  }).join('');
+  document.getElementById('tp-blocks').innerHTML = blocksHtml;
+
+  document.getElementById('training-plan-modal').classList.add('open');
+}
+
+function closeTrainingPlanModal() {
+  document.getElementById('training-plan-modal').classList.remove('open');
+}
+
+function closeTrainingPlanModalOutside(e) {
+  if (e.target.id === 'training-plan-modal') closeTrainingPlanModal();
+}
+
+function saveTrainingPlan() {
+  const ev = state.events.find(e => e.id === currentDetailEventId);
+  if (!ev) return;
+
+  const material = document.getElementById('tp-material').value.trim();
+  const blocks = TRAINING_PLAN_BLOCKS.map((def, i) => ({
+    key: def.key,
+    label: def.label,
+    duration: document.getElementById(`tp-dur-${i}`).value.trim(),
+    text: document.getElementById(`tp-text-${i}`).value.trim(),
+  }));
+
+  ev.plan = { material, blocks };
+  saveState();
+  closeTrainingPlanModal();
+  renderTrainingDetail(ev);
+  showToast('⚽ Trainingsplan gespeichert!');
+}
+
+function deleteCurrentEvent() {
+  if (!currentDetailEventId) return;
+  const ev = state.events.find(e => e.id === currentDetailEventId);
+  if (!ev) return;
+  const label = ev.type === 'training' ? 'Training' : 'Turnier';
+  if (!confirm(`${label} vom ${formatDateShort(ev.date)} wirklich löschen?`)) return;
+  state.events = state.events.filter(e => e.id !== currentDetailEventId);
+  delete state.attendance[currentDetailEventId];
+  delete state.squad[currentDetailEventId];
+  currentDetailEventId = null;
+  saveState();
+  renderCoachEvents();
+  goBack();
+  showToast(`${label} gelöscht`);
+}
+
+function openAddTournament() {
+  // Set default date to next Sunday
+  const d = new Date();
+  const daysToSun = (7 - d.getDay()) % 7 || 7;
+  d.setDate(d.getDate() + daysToSun);
+  document.getElementById('t-date').value = d.toISOString().split('T')[0];
+  document.getElementById('t-time').value = '09:00';
+  document.getElementById('t-location').value = '';
+  document.getElementById('tournament-modal').classList.add('open');
+}
+
+function closeTournamentModal() {
+  document.getElementById('tournament-modal').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+  if (e.target.id === 'tournament-modal') closeTournamentModal();
+}
+
+function saveTournament() {
+  const dateVal = document.getElementById('t-date').value;
+  const timeVal = document.getElementById('t-time').value;
+  const locVal  = document.getElementById('t-location').value.trim();
+
+  if (!dateVal || !timeVal || !locVal) {
+    showToast('Bitte alle Felder ausfüllen');
+    return;
+  }
+
+  const dateStr = `${dateVal}T${timeVal}:00`;
+  const newEvent = {
+    id: state.nextId++,
+    type: 'tournament',
+    date: dateStr,
+    location: locVal,
+    title: 'Turnier',
+  };
+  state.events.push(newEvent);
+  state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+  initEventAttendance(newEvent.id);
+  saveState();
+  closeTournamentModal();
+  renderCoachEvents();
+  showToast('🏆 Turnier gespeichert!');
+}
+
+// ============================================================
+// PARENT HOME
+// ============================================================
+
+function renderParentHome() {
+  const player = PLAYERS.find(p => p.id === state.currentUser.playerId);
+  if (!player) return;
+
+  document.getElementById('parent-home-name').textContent = 'Hallo ' + player.name.split(' ')[0];
+
+  // 1. Next event as hero with direct status actions
+  const upcoming = getUpcomingEvents();
+  const next = upcoming[0] || null;
+  document.getElementById('parent-home-hero').innerHTML = next
+    ? renderParentHero(next, player.id)
+    : '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine kommenden Events</div></div>';
+  if (next) scheduleParentHomeRefresh(next);
+
+  // 2. Season stats
+  const pastTrainings = state.events.filter(e => e.type === 'training' && isPast(e.date));
+  const pastTournaments = state.events.filter(e => e.type === 'tournament' && isPast(e.date));
+  const trainingsAttended = pastTrainings.filter(e => getStatus(e.id, player.id) === 'coming').length;
+  const trainingsInjured  = pastTrainings.filter(e => getStatus(e.id, player.id) === 'injured').length;
+  const trainingsAbsent   = pastTrainings.filter(e => getStatus(e.id, player.id) === 'absent').length;
+  const tournamentsPlayed = getSquadInCount(player.id);
+  const tournamentsBenched = getBenchedCount(player.id);
+  const trnPct = pastTrainings.length ? Math.round(trainingsAttended / pastTrainings.length * 100) : 0;
+  const tourPct = pastTournaments.length ? Math.round(tournamentsPlayed / pastTournaments.length * 100) : 0;
+  const trnDetail = trainingsInjured || trainingsAbsent
+    ? `<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:6px">${[trainingsAbsent ? `${trainingsAbsent}× abgesagt` : '', trainingsInjured ? `${trainingsInjured}× verletzt/krank` : ''].filter(Boolean).join(' · ')}</div>`
+    : '';
+  const tourDetail = tournamentsBenched
+    ? `<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:6px">${tournamentsBenched}× verfügbar, aber nicht aufgeboten</div>`
+    : '';
+
+  document.getElementById('parent-home-stats').innerHTML = `
+    <div class="home-stat-card" onclick="parentNavTo('events','training')" style="background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);margin-bottom:10px">
+      <div class="home-stat-label" style="color:rgba(255,255,255,0.75)">⚽ Training →</div>
+      <div class="home-stat-row">
+        <div class="home-stat-count" style="color:white">${trainingsAttended}<span class="home-stat-of" style="color:rgba(255,255,255,0.65)"> / ${pastTrainings.length || '—'}</span></div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9)">${pastTrainings.length ? trnPct + ' %' : 'Noch kein Training'}</div>
+      </div>
+      <div class="home-stat-bar" style="background:rgba(255,255,255,0.25)"><div class="home-stat-fill-training" style="width:${trnPct}%;background:white"></div></div>
+      ${trnDetail}
+    </div>
+    <div class="home-stat-card" onclick="parentNavTo('events','tournament')" style="background:linear-gradient(135deg, var(--bordeaux) 0%, #9B2335 100%)">
+      <div class="home-stat-label" style="color:rgba(255,255,255,0.75)">🏆 Turniere gespielt →</div>
+      <div class="home-stat-row">
+        <div class="home-stat-count" style="color:white">${tournamentsPlayed}<span class="home-stat-of" style="color:rgba(255,255,255,0.65)"> / ${pastTournaments.length || '—'}</span></div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9)">${pastTournaments.length ? tourPct + ' %' : 'Noch kein Turnier'}</div>
+      </div>
+      <div class="home-stat-bar" style="background:rgba(255,255,255,0.25)"><div class="home-stat-fill-tournament" style="width:${tourPct}%;background:white"></div></div>
+      ${tourDetail}
+    </div>`;
+}
+
+function renderParentHero(ev, playerId) {
+  const isTrn = ev.type === 'training';
+  const locked = isLockedForParent(ev.date);
+  const started = isPast(ev.date);
+  const status = getStatus(ev.id, playerId);
+  const heroClass = !isTrn ? 'tournament-hero' : 'training-hero';
+  const statusText = status === 'coming' ? (isTrn ? '✓ Ich bin dabei' : '✓ Ich bin verfügbar') : status === 'absent' ? '✗ Ich bin abwesend' : status === 'injured' ? '🩹 Ich bin verletzt' : '! Bitte Status wählen';
+  const regCount = getAttendanceCount(ev.id);
+  const maxCount = PLAYERS.length;
+  const count = Math.min(regCount, maxCount);
+  const pct = Math.round(count / maxCount * 100);
+  const label = isTrn
+    ? `${count} / ${maxCount} Mädchen dabei`
+    : `${count} von ${maxCount} verfügbar`;
+  const actionArea = locked
+    ? `<div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px;background:rgba(0,0,0,0.15);border-radius:8px;padding:8px 12px">${started ? 'Event hat begonnen — nur Trainer können noch ändern' : 'Anmeldeschluss erreicht — Änderungen waren bis 5 Std. vor Start möglich'}</div>`
+    : `<div class="parent-status-btns">
+        <button class="parent-status-btn ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming')">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
+        <button class="parent-status-btn ${status === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'absent')">✗ Absagen</button>
+        <button class="parent-status-btn ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
+      </div>`;
+  return `
+    <div class="parent-hero-card ${heroClass}">
+      <div class="parent-hero-title">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+      <div class="parent-hero-event">${formatDateShort(ev.date)}</div>
+      <div class="parent-hero-date">${formatTime(ev.date)} Uhr · ${ev.location}</div>
+      <div class="parent-status-text">${statusText}</div>
+      ${actionArea}
+      <div class="hero-attendance">
+        <div class="hero-attendance-text">${label}</div>
+        <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
+        ${!isTrn ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · Mitteilung via WhatsApp</div>` : ''}
+      </div>
+    </div>`;
+}
+
+let _parentHomeRefreshTimer = null;
+
+function scheduleParentHomeRefresh(nextEv) {
+  if (_parentHomeRefreshTimer) clearTimeout(_parentHomeRefreshTimer);
+  const msUntilStart = new Date(nextEv.date) - new Date();
+  if (msUntilStart > 0 && msUntilStart < 24 * 60 * 60 * 1000) {
+    _parentHomeRefreshTimer = setTimeout(() => renderParentHome(), msUntilStart);
+  }
+}
+
+let expandedParentEventId = null;
+
+function toggleParentEventExpand(evId) {
+  expandedParentEventId = expandedParentEventId === evId ? null : evId;
+  const page = document.querySelector('.page.active');
+  if (page && page.id === 'page-parent-all') renderParentAll();
+  else renderParentHome();
+}
+
+function parentNavTo(section, filter) {
+  parentEventFilter = filter;
+  const tabs = document.querySelectorAll('#page-parent-all .tab-btn');
+  const filterMap = { all: 0, training: 1, tournament: 2 };
+  tabs.forEach((b, i) => b.classList.toggle('active', i === filterMap[filter]));
+  showPage('page-parent-all', false);
+  syncNavActive('page-parent-all');
+  renderParentAll();
+}
+
+function filterParentTeam(val) {
+  renderParentTeam(val);
+}
+
+function renderParentTeam(filter = '') {
+  const currentPlayerId = state.currentUser && state.currentUser.playerId;
+  const filtered = PLAYERS.filter(p =>
+    p.name.toLowerCase().includes(filter.toLowerCase()) ||
+    p.parent.toLowerCase().includes(filter.toLowerCase()) ||
+    (p.nameMother && p.nameMother.toLowerCase().includes(filter.toLowerCase())) ||
+    (p.nameFather && p.nameFather.toLowerCase().includes(filter.toLowerCase()))
+  );
+  const staffFiltered = STAFF.filter(s =>
+    s.name.toLowerCase().includes(filter.toLowerCase()) ||
+    s.role.toLowerCase().includes(filter.toLowerCase())
+  );
+  document.getElementById('parent-team-players').innerHTML = filtered.map(p => {
+    const isMe = p.id === currentPlayerId;
+    return `
+    <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:${isMe ? 'var(--bordeaux-light)' : 'var(--gray-150)'};border-radius:12px;padding:10px 14px;${isMe ? 'border:1.5px solid var(--bordeaux);' : ''}">
+      <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
+      <div style="flex:1;min-width:0">
+        <div class="player-name" style="font-size:14px;${isMe ? 'color:var(--bordeaux);font-weight:800;' : ''}">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}">${p.nameMother ? p.nameMother + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
+        ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}">${p.nameFather ? p.nameFather + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('parent-team-staff').innerHTML = staffFiltered.map(s => `
+    <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:12px 14px">
+      <div class="avatar" style="width:42px;height:42px;font-size:14px;font-weight:800;background:${s.photo ? `url('${s.photo}') center/cover` : '#6B1A2A'};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${s.photo ? '' : getInitials(s.name)}</div>
+      <div style="flex:1">
+        <div class="player-name">${s.name}</div>
+        <div class="player-sub">${s.role}</div>
+      </div>
+      ${s.phone !== '—' ? `<a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>` : ''}
+    </div>`).join('');
+}
+
+function parentSetStatus(eventId, playerId, newStatus) {
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev && isLockedForParent(ev.date)) {
+    showToast(isPast(ev.date) ? 'Event hat begonnen — nur Trainer können ändern' : 'Anmeldeschluss — Änderungen bis 5 Std. vor Start möglich');
+    return;
+  }
+  if (!state.attendance[eventId]) {
+    state.attendance[eventId] = {};
+    // No default — players start as 'open'
+  }
+  state.attendance[eventId][playerId] = newStatus;
+  saveState();
+  const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
+  showToast(msg);
+  expandedParentEventId = null;
+  const page = document.querySelector('.page.active');
+  if (page && page.id === 'page-parent-all') renderParentAll();
+  else renderParentHome();
+}
+
+// ============================================================
+// PARENT ALL EVENTS
+// ============================================================
+
+let parentEventFilter = 'all';
+
+function filterParentEvents(filter, btn) {
+  parentEventFilter = filter;
+  document.querySelectorAll('#page-parent-all .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderParentAll();
+}
+
+function renderParentAll() {
+  const player = PLAYERS.find(p => p.id === state.currentUser.playerId);
+  if (!player) return;
+
+  const f = parentEventFilter;
+  const upcoming = getUpcomingEvents().filter(ev => f === 'all' || ev.type === f);
+  const listLabel = f === 'training' ? 'Alle Trainings' : f === 'tournament' ? 'Alle Turniere' : 'Alle Events';
+  const listHeader = `<div class="section-label">${listLabel}</div>`;
+
+  const listHtml = upcoming.map(ev => renderParentEventItemFull(ev, player.id, false)).join('');
+  document.getElementById('parent-all-list').innerHTML = listHeader + (listHtml || '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine kommenden Events</div></div>');
+}
+
+function renderParentEventItemFull(ev, playerId, pastEv) {
+  const isTrn = ev.type === 'training';
+  const locked = isLockedForParent(ev.date);
+  const started = isPast(ev.date);
+  const status = getStatus(ev.id, playerId);
+  const { day, month, weekday } = formatDateMini(ev.date);
+  const canToggle = !pastEv && !locked;
+  const badgeLabel = status === 'open' ? (canToggle ? '! Bitte melden' : 'Keine Meldung') : status === 'coming' ? (isTrn ? '✓ Dabei' : '✓ Verfügbar') : status === 'absent' ? '✗ Abwesend' : '🩹 Verletzt';
+  const badgeClass = status === 'open' && !canToggle ? 'open muted' : status;
+  const maxCount = PLAYERS.length;
+  const count = Math.min(getAttendanceCount(ev.id), maxCount);
+  const pct = Math.round(count / maxCount * 100);
+  const attendLabel = isTrn ? `${count}/${maxCount}` : `${count} verfügbar`;
+  const expanded = canToggle && expandedParentEventId === ev.id;
+  return `
+    <div class="parent-event-item ${pastEv ? 'past' : ''} ${expanded ? 'expanded' : ''}" ${canToggle ? `onclick="toggleParentEventExpand(${ev.id})" style="cursor:pointer"` : ''}>
+      <div class="event-date-col">
+        <div class="event-date-day">${day}</div>
+        <div class="event-date-month">${month}</div>
+        <div class="event-date-weekday">${weekday}</div>
+      </div>
+      <div class="event-info">
+        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+        <div class="event-name">${formatTime(ev.date)} Uhr</div>
+        <div class="event-meta">📍 ${ev.location}</div>
+        ${!pastEv ? `<div class="event-attendance">
+          <div class="event-attendance-bar"><div class="event-attendance-fill ${ev.type}" style="width:${pct}%"></div></div>
+          <div class="event-attendance-label">${attendLabel}</div>
+        </div>
+        ${!isTrn ? `<div style="font-size:10px;color:var(--gray-500);margin-top:2px">Aufgebot max. 10 · Coach meldet via WhatsApp</div>` : ''}
+        ${locked && !started ? `<div style="font-size:10px;color:var(--orange);margin-top:3px">🔒 Anmeldeschluss — Änderungen bis 5 Std. vor Start möglich</div>` : ''}` : ''}
+      </div>
+      <div class="parent-event-right">
+        <div class="status-badge ${badgeClass}">${badgeLabel}</div>
+        ${!isTrn && status === 'coming' ? (() => {
+          const sq = getSquadStatus(ev.id, playerId);
+          if (sq === 'in') return `<div class="parent-squad-badge in">Aufgebot ✓</div>`;
+          if (sq === 'out') return `<div class="parent-squad-badge out">Nicht dabei</div>`;
+          return `<div class="parent-squad-badge pending">Aufgebot offen</div>`;
+        })() : ''}
+        ${canToggle ? `<svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>` : ''}
+      </div>
+      ${expanded ? `<div class="list-status-btns" onclick="event.stopPropagation()">
+        <button class="list-status-btn coming ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming')">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
+        <button class="list-status-btn absent ${status === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'absent')">✗ Absagen</button>
+        <button class="list-status-btn injured ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
+      </div>` : ''}
+    </div>`;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+function init() {
+  loadState();
+  populateChildSelect();
+
+  // Restore session
+  const session = localStorage.getItem('girlsfc_session');
+  if (session) {
+    try {
+      state.currentUser = JSON.parse(session);
+      if (state.currentUser.role === 'coach') {
+        updateChildBadge();
+        showPage('page-coach-home', false);
+        document.getElementById('coach-nav').style.display = 'flex';
+      } else if (state.currentUser.role === 'parent') {
+        updateChildBadge();
+        document.getElementById('parent-nav').style.display = 'flex';
+        showPage('page-parent-home', false);
+        syncNavActive('page-parent-home');
+      }
+      return;
+    } catch(e) {}
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
