@@ -1516,16 +1516,14 @@ const DE_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','Augus
 const DE_MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
 // ── Saison 2026/27 (JF-D, gemäss FVRZ-Rundenkalender Stand 02.04.26) ──
-// Trainings: Mi/Fr 17:30, Sportanlage Hönggerberg, ausser Ferien & Winterpause
-// (Hallentraining in der Winterpause wird separat ergänzt, sobald bekannt).
+// Trainings: Mi/Fr 17:30, Sportanlage Hönggerberg, ausser Ferien
+// Nur Herbstrunde 2026 erfasst — Rückrunde 2027 folgt separat, sobald bestätigt.
 function generateTrainings() {
   const windows = [
-    ['2026-08-19', '2026-11-06'], // Herbstrunde bis zum letzten Meisterschaftswochenende
-    ['2027-03-17', '2027-06-25'], // Frühjahrsrunde
+    ['2026-08-19', '2026-11-08'], // Herbstrunde bis zum letzten Turnier (08.11.26)
   ];
   const holidays = [
     ['2026-10-05', '2026-10-16'], // Herbstferien ZH
-    ['2027-04-26', '2027-05-07'], // Frühlingsferien ZH
   ];
   const inRange = (d, ranges) => ranges.some(([s, e]) => {
     const start = new Date(s + 'T00:00:00');
@@ -1557,12 +1555,11 @@ function generateTrainings() {
 
 // Turniere: Meisterschaftsspiele JF-D, jeweils Sonntag (Samstag im Rundenkalender + 1 Tag).
 // Ort/genaue Zeit werden erst im August pro Spiel bekanntgegeben (Gegner noch offen).
+// Nur Herbstrunde 2026 erfasst — Rückrunde 2027 folgt separat, sobald bestätigt.
 function generateTournaments() {
   const dates = [
     '2026-08-23', '2026-08-30', '2026-09-06', '2026-09-13', '2026-09-20', '2026-09-27',
     '2026-10-25', '2026-11-01', '2026-11-08',
-    '2027-03-21', '2027-04-04', '2027-04-11', '2027-04-18',
-    '2027-05-23', '2027-05-30', '2027-06-06', '2027-06-13', '2027-06-20',
   ];
   let id = 200;
   return dates.map(dateStr => {
