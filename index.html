@@ -1204,11 +1204,11 @@
               <div class="login-card-title">Juniorinnen Ema</div>
             </div>
           </div>
-          <div class="login-card-body" style="display:flex;gap:8px">
-            <select class="form-select" id="child-select" onchange="this.classList.toggle('has-value', !!this.value)" style="flex:1">
+          <div class="login-card-body">
+            <select class="form-select" id="child-select" onchange="this.classList.toggle('has-value', !!this.value)">
               <option value="">Name wählen...</option>
             </select>
-            <button onclick="doParentLogin()" aria-label="Weiter" style="height:48px;width:48px;padding:0;border-radius:var(--radius-btn);border:none;background:var(--brand-blue-mid);color:white;box-shadow:0 4px 16px rgba(59,130,246,0.40);font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">→</button>
+            <button class="btn btn-primary" onclick="doParentLogin()" style="margin-top:12px;background:var(--brand-blue-mid);color:white;box-shadow:0 4px 16px rgba(59,130,246,0.40)">Weiter</button>
           </div>
         </div>
         <div id="coach-card" style="padding:16px 4px 0">
