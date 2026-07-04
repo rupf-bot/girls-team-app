@@ -457,11 +457,17 @@
   }
 
   .stats-row {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     margin: 0 20px;
   }
+  .stats-row-inner {
+    display: grid;
+    gap: 10px;
+  }
+  .stats-row-inner.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .stats-row-inner.cols-2 { grid-template-columns: repeat(2, 1fr); }
   .stat-card {
     background: var(--gray-150);
     border-radius: 14px;
@@ -1508,28 +1514,38 @@ const DE_DAYS_FULL  = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Fr
 const DE_MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 const DE_MONTHS_SHORT = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
-// ── Season simulation ──
-// Die Saison ist grösstenteils gespielt: 20 vergangene Trainings + 4 kommende,
-// 4 vergangene Turniere + 2 kommende.
+// ── Saison 2026/27 (JF-D, gemäss FVRZ-Rundenkalender Stand 02.04.26) ──
+// Trainings: Mi/Fr 17:30, Sportanlage Hönggerberg, ausser Ferien & Winterpause
+// (Hallentraining in der Winterpause wird separat ergänzt, sobald bekannt).
 function generateTrainings() {
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(start.getDate() - 12 * 7);
-  start.setHours(0, 0, 0, 0);
-  // Alle Mi/Fr 17:30 im Fenster -12 bis +4 Wochen
+  const windows = [
+    ['2026-08-19', '2026-11-06'], // Herbstrunde bis zum letzten Meisterschaftswochenende
+    ['2027-03-17', '2027-06-25'], // Frühjahrsrunde
+  ];
+  const holidays = [
+    ['2026-10-05', '2026-10-16'], // Herbstferien ZH
+    ['2027-04-26', '2027-05-07'], // Frühlingsferien ZH
+  ];
+  const inRange = (d, ranges) => ranges.some(([s, e]) => {
+    const start = new Date(s + 'T00:00:00');
+    const end = new Date(e + 'T23:59:59');
+    return d >= start && d <= end;
+  });
+
   const dates = [];
-  for (let i = 0; i < 16 * 7; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    if (d.getDay() === 3 || d.getDay() === 5) {
-      d.setHours(17, 30, 0, 0);
-      dates.push(d);
+  windows.forEach(([s, e]) => {
+    const end = new Date(e + 'T00:00:00');
+    for (let d = new Date(s + 'T00:00:00'); d <= end; d.setDate(d.getDate() + 1)) {
+      if ((d.getDay() === 3 || d.getDay() === 5) && !inRange(d, holidays)) {
+        const dt = new Date(d);
+        dt.setHours(17, 30, 0, 0);
+        dates.push(dt);
+      }
     }
-  }
-  const past   = dates.filter(d => d < now).slice(-20);
-  const future = dates.filter(d => d >= now).slice(0, 4);
+  });
+
   let id = 100;
-  return [...past, ...future].map(d => ({
+  return dates.map(d => ({
     id: id++,
     type: 'training',
     date: d.toISOString(),
@@ -1538,21 +1554,25 @@ function generateTrainings() {
   }));
 }
 
+// Turniere: Meisterschaftsspiele JF-D, jeweils Sonntag (Samstag im Rundenkalender + 1 Tag).
+// Ort/genaue Zeit werden erst im August pro Spiel bekanntgegeben (Gegner noch offen).
 function generateTournaments() {
-  const now = new Date();
-  const base = new Date(now);
-  base.setHours(0, 0, 0, 0);
-  const toSun = (7 - base.getDay()) % 7;
-  const nextSun = new Date(base);
-  nextSun.setDate(base.getDate() + (toSun === 0 ? 7 : toSun));
-  // Wochen relativ zum nächsten Sonntag: 4 vergangene, 2 kommende Turniere
-  const offsets = [-11, -8, -5, -2, 0, 3];
-  const locs = ['Sportanlage Hönggerberg', 'Feld Heerenschürli, Zürich', 'Sportplatz Juchhof, Zürich', 'Sportanlage Hönggerberg', 'Sportanlage Hönggerberg', 'Feld Heerenschürli, Zürich'];
-  return offsets.map((w, i) => {
-    const d = new Date(nextSun);
-    d.setDate(nextSun.getDate() + w * 7);
-    d.setHours(i % 2 ? 10 : 9, 0, 0, 0);
-    return { id: 200 + i, type: 'tournament', date: d.toISOString(), location: locs[i], title: 'Turnier' };
+  const dates = [
+    '2026-08-23', '2026-08-30', '2026-09-06', '2026-09-13', '2026-09-20', '2026-09-27',
+    '2026-10-25', '2026-11-01', '2026-11-08',
+    '2027-03-21', '2027-04-04', '2027-04-11', '2027-04-18',
+    '2027-05-23', '2027-05-30', '2027-06-06', '2027-06-13', '2027-06-20',
+  ];
+  let id = 200;
+  return dates.map(dateStr => {
+    const d = new Date(`${dateStr}T09:00:00`);
+    return {
+      id: id++,
+      type: 'tournament',
+      date: d.toISOString(),
+      location: 'Ort & Zeit folgen im August',
+      title: 'Turnier',
+    };
   });
 }
 
@@ -2031,25 +2051,33 @@ function renderStats() {
     trmtPct = Math.round(total / (pastTournaments.length * PLAYERS.length) * 100) + '%';
   }
   const refEv = getEventWithLatestData();
+  const fitCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'coming').length : PLAYERS.length;
   const injuredCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'injured').length : 0;
-  const absentCount  = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'absent').length : 0;
-  const availableCount = PLAYERS.length - injuredCount - absentCount;
+  const absentCount = refEv ? PLAYERS.filter(p => getStatus(refEv.id, p.id) === 'absent').length : 0;
   document.getElementById('coach-stats').innerHTML = `
-    <div class="stat-card" style="background:var(--gray-150)">
-      <div class="stat-value">${refEv ? availableCount : PLAYERS.length}</div>
-      <div class="stat-label">Spielerinnen fit</div>
+    <div class="stats-row-inner cols-3">
+      <div class="stat-card" style="background:var(--gray-150)">
+        <div class="stat-value">${fitCount}</div>
+        <div class="stat-label">Spielerinnen fit</div>
+      </div>
+      <div class="stat-card" style="${injuredCount > 0 ? 'background:var(--red-light)' : ''}">
+        <div class="stat-value" style="${injuredCount > 0 ? 'color:var(--red)' : ''}">${injuredCount}</div>
+        <div class="stat-label">Verletzt / Krank</div>
+      </div>
+      <div class="stat-card" style="${absentCount > 0 ? 'background:var(--red-light)' : ''}">
+        <div class="stat-value" style="${absentCount > 0 ? 'color:var(--red)' : ''}">${absentCount}</div>
+        <div class="stat-label">Abwesend</div>
+      </div>
     </div>
-    <div class="stat-card" style="${injuredCount > 0 ? 'background:var(--red-light)' : ''}">
-      <div class="stat-value" style="${injuredCount > 0 ? 'color:var(--red)' : ''}">${injuredCount}</div>
-      <div class="stat-label">Verletzt / Krank</div>
-    </div>
-    <div class="stat-card" style="background:linear-gradient(135deg,var(--brand-blue) 0%,var(--brand-blue-mid) 100%)">
-      <div class="stat-value" style="color:white">${trnPct}</div>
-      <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Training</div>
-    </div>
-    <div class="stat-card" style="background:linear-gradient(135deg,var(--bordeaux) 0%,#9B2335 100%)">
-      <div class="stat-value" style="color:white">${trmtPct}</div>
-      <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Turnier</div>
+    <div class="stats-row-inner cols-2">
+      <div class="stat-card" style="background:linear-gradient(135deg,var(--brand-blue) 0%,var(--brand-blue-mid) 100%)">
+        <div class="stat-value" style="color:white">${trnPct}</div>
+        <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Training</div>
+      </div>
+      <div class="stat-card" style="background:linear-gradient(135deg,var(--bordeaux) 0%,#9B2335 100%)">
+        <div class="stat-value" style="color:white">${trmtPct}</div>
+        <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Turnier</div>
+      </div>
     </div>`;
 }
 
@@ -2414,6 +2442,8 @@ function renderPlayers(filter = '') {
 
   const pastTrainings = state.events.filter(e => e.type === 'training' && isPast(e.date));
   const pastTournaments = state.events.filter(e => e.type === 'tournament' && isPast(e.date));
+  const refEv = getEventWithLatestData();
+  const healthLabels = { coming: ['Fit', 'coming'], injured: ['Verletzt/Krank', 'injured'], absent: ['Abwesend', 'absent'], open: ['Offen', 'open muted'] };
 
   document.getElementById('players-grid').innerHTML = `
     <div style="padding:0 16px;display:flex;flex-direction:column;gap:6px">
@@ -2421,12 +2451,14 @@ function renderPlayers(filter = '') {
         const trn = pastTrainings.filter(e => getStatus(e.id, p.id) === 'coming').length;
         const trnPct = pastTrainings.length ? Math.round(trn / pastTrainings.length * 100) : 0;
         const played = getSquadInCount(p.id);
+        const health = refEv ? getStatus(refEv.id, p.id) : 'open';
+        const [healthLabel, healthClass] = healthLabels[health] || healthLabels.open;
         return `
         <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:10px 14px">
           <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
           <div style="flex:1;min-width:0">
             <div class="player-name">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
-            <div style="display:flex;flex-direction:column;gap:2px;margin-top:2px">
+            <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
               <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
               ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
             </div>
@@ -2434,6 +2466,7 @@ function renderPlayers(filter = '') {
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
             <span style="font-size:14px;font-weight:700;color:var(--brand-blue)">⚽ ${trn}/${pastTrainings.length} (${trnPct} %)</span>
             <span style="font-size:14px;font-weight:700;color:var(--bordeaux)">🏆 ${played}/${pastTournaments.length}</span>
+            <span class="status-badge ${healthClass}">${healthLabel}</span>
           </div>
         </div>`;}).join('')}
     </div>
