@@ -2444,7 +2444,7 @@ function renderTournamentDetail(ev) {
       <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
-      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--teal);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">📅 Zum Google Kalender hinzufügen</a>
+      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--teal);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">🏟️ Zum Google Kalender hinzufügen</a>
       ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
     </div>
 
