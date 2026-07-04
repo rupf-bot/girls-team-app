@@ -2326,7 +2326,7 @@ function renderTrainingDetail(ev) {
     <div class="section-padding" style="margin-top:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="section-title" style="margin-bottom:0">Trainingsplan</div>
-        ${isCoach ? `<button onclick="openTrainingPlan(${ev.id})" style="background:none;border:none;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0">${hasPlan ? 'Bearbeiten' : '+ Erstellen'}</button>` : ''}
+        ${isCoach ? `<button onclick="openTrainingPlan(${ev.id})" style="background:none;border:none;color:var(--brand-blue-mid);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0">${hasPlan ? 'Bearbeiten' : '+ Erstellen'}</button>` : ''}
       </div>
       ${hasPlan ? `
         ${ev.plan.material ? `<div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">📦 ${ev.plan.material}</div>` : ''}
@@ -2444,8 +2444,8 @@ function renderTournamentDetail(ev) {
       <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
-      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--teal);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">🏟️ Zum Google Kalender hinzufügen</a>
-      ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
+      <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--brand-blue-mid);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">📅 Zum Google Kalender hinzufügen</a>
+      ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--brand-blue-mid);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
     </div>
 
     <div class="squad-header">
@@ -2884,6 +2884,7 @@ function renderParentHero(ev, playerId) {
         <button class="parent-status-btn ${status === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'absent')">✗ Absagen</button>
         <button class="parent-status-btn ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>`;
+  const calendarLink = !isTrn ? `<a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:white;font-size:12px;font-weight:700;text-decoration:underline">📅 Zum Google Kalender hinzufügen</a>` : '';
   return `
     <div class="parent-hero-card ${heroClass}">
       <div class="parent-hero-title">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
@@ -2896,6 +2897,7 @@ function renderParentHero(ev, playerId) {
         <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
         ${!isTrn ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · Mitteilung via WhatsApp</div>` : ''}
       </div>
+      ${calendarLink}
     </div>`;
 }
 
