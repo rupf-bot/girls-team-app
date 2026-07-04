@@ -122,7 +122,10 @@
     position: fixed;
     bottom: 0;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
     width: 100%;
     max-width: 480px;
     height: var(--nav-height);
@@ -1624,7 +1627,7 @@ let state = {
   events: [],
   attendance: {},      // { eventId: { playerId: 'coming'|'absent'|'injured' } }
   squad: {},           // { eventId: { playerId: 'in'|'out' } } — tournament only
-  nextId: 300,
+  staffAttendance: {},
 };
 
 function loadState() {
@@ -1634,10 +1637,10 @@ function loadState() {
       const parsed = JSON.parse(saved);
       // Version 3 = Saison-Simulation; ältere Stände werden verworfen und neu generiert
       if (parsed.stateVersion === 3) {
-        state.events     = parsed.events     || [];
-        state.attendance = parsed.attendance || {};
-        state.squad      = parsed.squad      || {};
-        state.nextId     = parsed.nextId     || 300;
+        state.events          = parsed.events          || [];
+        state.attendance      = parsed.attendance       || {};
+        state.squad           = parsed.squad            || {};
+        state.staffAttendance = parsed.staffAttendance  || {};
       }
     }
   } catch(e) {}
@@ -1652,13 +1655,68 @@ function loadState() {
   saveState();
 }
 
+// ── Server-Sync (gemeinsamer Stand für Coach & Eltern via Cloudflare KV) ──
+const API_BASE = '/api/state';
+
+async function apiPatch(body) {
+  try {
+    await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    // Offline / Server nicht erreichbar — Änderung bleibt vorerst nur lokal gespeichert
+  }
+}
+
+async function syncFromServer(rerender = true) {
+  try {
+    const res = await fetch(API_BASE);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.events && data.events.length) {
+      state.events = data.events;
+    } else if (state.events.length) {
+      // Server noch leer (allererster Start) — lokal generierte Events übernehmen
+      apiPatch({ action: 'bootstrapEvents', events: state.events });
+    }
+    state.attendance      = data.attendance      || {};
+    state.squad           = data.squad           || {};
+    state.staffAttendance = data.staffAttendance || {};
+    state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
+    saveState();
+
+    if (rerender) rerenderCurrentPage();
+  } catch (e) {
+    // Offline — mit lokalem Stand weiterarbeiten
+  }
+}
+
+function rerenderCurrentPage() {
+  const page = document.querySelector('.page.active');
+  if (!page) return;
+  if (page.id === 'page-event-detail') {
+    const ev = state.events.find(e => e.id === currentDetailEventId);
+    if (ev) renderEventDetail(ev);
+    return;
+  }
+  if (page.id === 'page-coach-home')    renderCoachHome();
+  if (page.id === 'page-coach-events')  renderCoachEvents();
+  if (page.id === 'page-coach-players') renderPlayers();
+  if (page.id === 'page-parent-home')   renderParentHome();
+  if (page.id === 'page-parent-all')    renderParentAll();
+  if (page.id === 'page-parent-team')   renderParentTeam();
+}
+
 function saveState() {
   localStorage.setItem('girlsfc_state', JSON.stringify({
     stateVersion: 3,
     events: state.events,
     attendance: state.attendance,
     squad: state.squad,
-    nextId: state.nextId,
+    staffAttendance: state.staffAttendance,
   }));
 }
 
@@ -1697,6 +1755,7 @@ function cycleStatus(eventId, playerId) {
   if (next === 'open') delete state.attendance[eventId][playerId];
   else state.attendance[eventId][playerId] = next;
   saveState();
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: next === 'open' ? null : next });
   return next;
 }
 
@@ -1706,8 +1765,10 @@ function toggleAttendance(eventId, playerId) {
     // No default — players start as 'open'
   }
   const current = getStatus(eventId, playerId);
-  state.attendance[eventId][playerId] = current === 'coming' ? 'absent' : 'coming';
+  const next = current === 'coming' ? 'absent' : 'coming';
+  state.attendance[eventId][playerId] = next;
   saveState();
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: next });
 }
 
 function getAttendanceCount(eventId) {
@@ -1726,6 +1787,7 @@ function setSquadStatus(eventId, playerId, status) {
     state.squad[eventId][playerId] = status;
   }
   saveState();
+  apiPatch({ action: 'setSquad', eventId, playerId, status: state.squad[eventId][playerId] || null });
 }
 function getSquadCount(eventId) {
   if (!state.squad[eventId]) return 0;
@@ -1778,6 +1840,7 @@ function cycleStaffStatus(eventId, staffId) {
   const next = current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'coming';
   state.staffAttendance[eventId][staffId] = next;
   saveState();
+  apiPatch({ action: 'setStaffAttendance', eventId, staffId, status: next });
   return next;
 }
 
@@ -1887,6 +1950,7 @@ function showPage(pageId, pushHistory = true) {
   if (target) target.classList.add('active');
   currentPage = pageId;
   target.scrollTop = 0;
+  window.scrollTo(0, 0);
 
   // Show/hide nav
   const nav = document.getElementById('coach-nav');
@@ -1901,6 +1965,8 @@ function showPage(pageId, pushHistory = true) {
   if (pageId === 'page-parent-all')    { renderParentAll(); syncNavActive('page-parent-all'); }
   if (pageId === 'page-parent-home')   syncNavActive('page-parent-home');
   if (pageId === 'page-parent-team')   { renderParentTeam(); syncNavActive('page-parent-team'); }
+
+  if (pageId === 'page-coach-home' || pageId === 'page-parent-home') syncFromServer();
 }
 
 function goBack() {
@@ -1943,6 +2009,8 @@ function doLogin() {
     showPage('page-coach-home');
     document.getElementById('coach-nav').style.display = 'flex';
     syncNavActive('page-coach-home');
+    syncFromServer();
+    startSyncPolling();
   } else {
     document.getElementById('login-error').textContent = 'Falsches Passwort';
   }
@@ -1963,6 +2031,8 @@ function doParentLogin() {
   document.getElementById('parent-nav').style.display = 'flex';
   showPage('page-parent-home');
   syncNavActive('page-parent-home');
+  syncFromServer();
+  startSyncPolling();
 }
 
 function updateChildBadge() {
@@ -2525,7 +2595,7 @@ function saveTraining() {
 
   const dateStr = `${dateVal}T${timeVal}:00`;
   const newEvent = {
-    id: state.nextId++,
+    id: Date.now(),
     type: 'training',
     date: dateStr,
     location: locVal,
@@ -2535,6 +2605,7 @@ function saveTraining() {
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   initEventAttendance(newEvent.id);
   saveState();
+  apiPatch({ action: 'upsertEvent', event: newEvent });
   closeTrainingModal();
   renderCoachEvents();
   showToast('⚽ Training gespeichert!');
@@ -2588,6 +2659,7 @@ function saveTrainingPlan() {
 
   ev.plan = { material, blocks };
   saveState();
+  apiPatch({ action: 'upsertEvent', event: ev });
   closeTrainingPlanModal();
   renderTrainingDetail(ev);
   showToast('⚽ Trainingsplan gespeichert!');
@@ -2599,11 +2671,14 @@ function deleteCurrentEvent() {
   if (!ev) return;
   const label = ev.type === 'training' ? 'Training' : 'Turnier';
   if (!confirm(`${label} vom ${formatDateShort(ev.date)} wirklich löschen?`)) return;
-  state.events = state.events.filter(e => e.id !== currentDetailEventId);
-  delete state.attendance[currentDetailEventId];
-  delete state.squad[currentDetailEventId];
+  const deletedId = currentDetailEventId;
+  state.events = state.events.filter(e => e.id !== deletedId);
+  delete state.attendance[deletedId];
+  delete state.squad[deletedId];
+  delete state.staffAttendance[deletedId];
   currentDetailEventId = null;
   saveState();
+  apiPatch({ action: 'deleteEvent', eventId: deletedId });
   renderCoachEvents();
   goBack();
   showToast(`${label} gelöscht`);
@@ -2640,7 +2715,7 @@ function saveTournament() {
 
   const dateStr = `${dateVal}T${timeVal}:00`;
   const newEvent = {
-    id: state.nextId++,
+    id: Date.now(),
     type: 'tournament',
     date: dateStr,
     location: locVal,
@@ -2650,6 +2725,7 @@ function saveTournament() {
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   initEventAttendance(newEvent.id);
   saveState();
+  apiPatch({ action: 'upsertEvent', event: newEvent });
   closeTournamentModal();
   renderCoachEvents();
   showToast('🏆 Turnier gespeichert!');
@@ -2830,6 +2906,7 @@ function parentSetStatus(eventId, playerId, newStatus) {
   }
   state.attendance[eventId][playerId] = newStatus;
   saveState();
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: newStatus });
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
   expandedParentEventId = null;
@@ -2937,10 +3014,25 @@ function init() {
         showPage('page-parent-home', false);
         syncNavActive('page-parent-home');
       }
+      syncFromServer();
+      startSyncPolling();
       return;
     } catch(e) {}
   }
 }
+
+let syncPollTimer = null;
+
+function startSyncPolling() {
+  if (syncPollTimer) return;
+  syncPollTimer = setInterval(() => {
+    if (state.currentUser && !document.hidden) syncFromServer();
+  }, 20000);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && state.currentUser) syncFromServer();
+});
 
 window.addEventListener('DOMContentLoaded', init);
 </script>
