@@ -2539,8 +2539,8 @@ function renderPlayers(filter = '') {
           <div style="flex:1;min-width:0">
             <div class="player-name">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
             <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
-              <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
-              ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
+              <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
+              ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather.split(' ')[0] + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
@@ -2889,8 +2889,8 @@ function renderParentTeam(filter = '') {
         <div class="player-name" style="font-size:14px;${isMe ? 'color:var(--bordeaux);font-weight:800;' : ''}">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}">${p.nameMother ? p.nameMother + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
-        ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}">${p.nameFather ? p.nameFather + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
+        <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
+        ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}">${p.nameFather ? p.nameFather.split(' ')[0] + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
       </div>
     </div>`;
   }).join('');
