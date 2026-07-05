@@ -4,6 +4,7 @@
 //
 // Keys:
 //   ev:<eventId>                 → JSON einzelnes Event {id,type,date,location,title,plan?}
+//   pl:<playerId>                → JSON einzelne Spielerin {id,name,parent,phone,nameMother?,phone2?,nameFather?,number?}
 //   att:<eventId>:<playerId>     → Anwesenheits-Status ('coming'|'absent'|'injured')
 //   sq:<eventId>:<playerId>      → Aufgebot-Status ('in'|'out')
 //   staff:<eventId>:<staffId>    → Staff-Status ('coming'|'absent'|'injured')
@@ -38,14 +39,16 @@ async function listAll(kv, prefix) {
 }
 
 async function buildState(kv) {
-  const [evKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
+  const [evKeys, plKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
     listAll(kv, 'ev:'),
+    listAll(kv, 'pl:'),
     listAll(kv, 'att:'),
     listAll(kv, 'sq:'),
     listAll(kv, 'staff:'),
   ]);
 
   const events = (await Promise.all(evKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
+  const players = (await Promise.all(plKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
 
   const attendance = {};
   await Promise.all(attKeys.map(async k => {
@@ -74,7 +77,7 @@ async function buildState(kv) {
     staffAttendance[eventId][staffId] = status;
   }));
 
-  return { events, attendance, squad, staffAttendance };
+  return { events, players, attendance, squad, staffAttendance };
 }
 
 async function rebuildCache(kv) {
@@ -157,6 +160,50 @@ export async function onRequestPost(context) {
       ...sqKeys.map(k => kv.delete(k.name)),
       ...staffKeys.map(k => kv.delete(k.name)),
     ]);
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'upsertPlayer') {
+    const { player } = body;
+    if (!player || !isFiniteId(player.id) || !player.name) {
+      return new Response(JSON.stringify({ error: 'player ungültig' }), { status: 400 });
+    }
+    await kv.put(`pl:${player.id}`, JSON.stringify(player));
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'deletePlayer') {
+    const { playerId } = body;
+    if (!isFiniteId(playerId)) {
+      return new Response(JSON.stringify({ error: 'playerId ungültig' }), { status: 400 });
+    }
+    const [attKeys, sqKeys] = await Promise.all([
+      listAll(kv, 'att:'),
+      listAll(kv, 'sq:'),
+    ]);
+    const matches = (keys) => keys.filter(k => k.name.split(':')[2] === String(playerId));
+    await Promise.all([
+      kv.delete(`pl:${playerId}`),
+      ...matches(attKeys).map(k => kv.delete(k.name)),
+      ...matches(sqKeys).map(k => kv.delete(k.name)),
+    ]);
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'bootstrapPlayers') {
+    // Nur schreiben, falls server-seitig noch keine Spielerinnen existieren (erster Start).
+    const existing = await listAll(kv, 'pl:');
+    if (existing.length > 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }));
+    }
+    const { players } = body;
+    if (!Array.isArray(players)) {
+      return new Response(JSON.stringify({ error: 'players ungültig' }), { status: 400 });
+    }
+    await Promise.all(players.map(p => kv.put(`pl:${p.id}`, JSON.stringify(p))));
     await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }

@@ -1240,6 +1240,9 @@
     <div class="scroll-content">
       <div class="section-label">Statistik</div>
       <div class="stats-row" id="coach-stats"></div>
+      <div style="padding:0 20px 4px">
+        <button onclick="exportSeasonStats()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gray-150);border:none;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer">📊 Statistik exportieren (Excel)</button>
+      </div>
       <div class="section-label">Event hinzufügen</div>
       <div style="padding:0 20px 4px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <button onclick="openAddTraining()" style="position:relative;display:flex;flex-direction:column;gap:8px;background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);border:none;border-radius:14px;padding:16px 14px;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent">
@@ -1256,6 +1259,10 @@
             <div style="font-size:13px;font-weight:800;color:white;line-height:1.2">Turnier <span style="font-weight:800">hinzufügen</span></div>
           </div>
         </button>
+      </div>
+      <div class="section-label">Team</div>
+      <div style="padding:0 20px 4px">
+        <button onclick="openAddPlayer()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--navy);border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;color:white;cursor:pointer">+ Spielerin hinzufügen</button>
       </div>
     </div>
   </div>
@@ -1312,6 +1319,9 @@
     <div class="search-input-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input class="search-input" type="text" placeholder="Name suchen..." oninput="filterPlayers(this.value)">
+    </div>
+    <div style="padding:0 16px 10px">
+      <button onclick="openAddPlayer()" style="width:100%;padding:10px;border:none;border-radius:12px;background:var(--navy);color:white;font-weight:700;font-size:13px;cursor:pointer">+ Spielerin hinzufügen</button>
     </div>
     <div id="available-numbers" style="margin:0 16px 10px;padding:10px 14px;background:var(--blue-light);border-radius:12px;font-size:13px;font-weight:600;color:var(--navy)"></div>
     <div id="players-grid"></div>
@@ -1455,6 +1465,47 @@
     </div>
   </div>
 
+  <!-- ADD/EDIT PLAYER MODAL -->
+  <div class="modal-overlay" id="player-modal" onclick="closePlayerModalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="modal-title" id="player-modal-title" style="margin-bottom:0">Spielerin hinzufügen</div>
+        <button id="pl-delete-btn" onclick="deleteCurrentPlayer()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" type="text" id="pl-name" placeholder="Vorname Nachname">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Trikotnummer</label>
+        <input class="form-input" type="number" min="1" max="30" id="pl-number" placeholder="z. B. 7">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name Mutter</label>
+        <input class="form-input" type="text" id="pl-mother-name" placeholder="optional">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon Mutter</label>
+        <input class="form-input" type="tel" id="pl-mother-phone" placeholder="optional">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name Vater</label>
+        <input class="form-input" type="text" id="pl-father-name" placeholder="optional">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon Vater</label>
+        <input class="form-input" type="tel" id="pl-father-phone" placeholder="optional">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closePlayerModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="savePlayer()" style="margin-top:0">Speichern</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TRAINING PLAN MODAL -->
   <div class="modal-overlay" id="training-plan-modal" onclick="closeTrainingPlanModalOutside(event)">
     <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
@@ -1482,7 +1533,7 @@
 // DATA MODEL
 // ============================================================
 
-const PLAYERS = [
+let PLAYERS = [
   { id: 1,  name: 'Emilia Bajunovic',       parent: 'Familie Bajunovic',     phone: '077 412 67 92', nameMother: 'Maja',      phone2: '076 375 16 66', nameFather: 'Danijel', number: 12 },
   { id: 3,  name: 'Marley Büeler',          parent: 'Familie Büeler',        phone: '078 766 19 00', nameMother: 'Corinne',   phone2: '078 858 57 17', nameFather: 'Marcel', number: 24 },
   { id: 4,  name: 'Kaia Burger',            parent: 'Familie Burger',        phone: '076 407 95 16', nameMother: 'Karolina',  phone2: '079 637 08 61', nameFather: 'Irwan', number: 20 },
@@ -1647,6 +1698,11 @@ function loadState() {
         state.staffAttendance = parsed.staffAttendance  || {};
       }
     }
+    const savedPlayers = localStorage.getItem('girlsfc_players');
+    if (savedPlayers) {
+      const parsedPlayers = JSON.parse(savedPlayers);
+      if (Array.isArray(parsedPlayers) && parsedPlayers.length) PLAYERS = parsedPlayers;
+    }
   } catch(e) {}
 
   if (!state.events.length) {
@@ -1723,6 +1779,16 @@ async function syncFromServer(rerender = true) {
     state.attendance      = data.attendance      || {};
     state.squad           = data.squad           || {};
     state.staffAttendance = data.staffAttendance || {};
+
+    if (data.players && data.players.length) {
+      PLAYERS = data.players;
+      savePlayersLocal();
+      refreshChildSelect();
+    } else if (PLAYERS.length) {
+      // Server noch leer (allererster Start) — lokale Spielerinnen übernehmen
+      apiPatch({ action: 'bootstrapPlayers', players: PLAYERS });
+    }
+
     pruneObsoleteEvents();
     if (!state.events.length) {
       state.events = [...generateTrainings(), ...generateTournaments()];
@@ -1762,6 +1828,10 @@ function saveState() {
     squad: state.squad,
     staffAttendance: state.staffAttendance,
   }));
+}
+
+function savePlayersLocal() {
+  localStorage.setItem('girlsfc_players', JSON.stringify(PLAYERS));
 }
 
 function initDefaultAttendance() {
@@ -2103,12 +2173,17 @@ function doLogout() {
 
 function populateChildSelect() {
   const sel = document.getElementById('child-select');
-  PLAYERS.forEach(p => {
+  sel.querySelectorAll('option[value]:not([value=""])').forEach(o => o.remove());
+  PLAYERS.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.name;
     sel.appendChild(opt);
   });
+}
+
+function refreshChildSelect() {
+  populateChildSelect();
 }
 
 // ============================================================
@@ -2611,6 +2686,7 @@ function renderPlayers(filter = '') {
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+            <button onclick="openEditPlayer(${p.id})" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:15px;cursor:pointer;padding:0 0 2px">✎</button>
             <span style="font-size:14px;font-weight:700;color:var(--brand-blue)">⚽ ${trn}/${pastTrainings.length} (${trnPct} %)</span>
             <span style="font-size:14px;font-weight:700;color:var(--bordeaux)">🏆 ${played}/${pastTournaments.length}</span>
             <span class="status-badge ${healthClass}">${healthLabel}</span>
@@ -2636,6 +2712,155 @@ function renderPlayers(filter = '') {
 function filterPlayers(val) {
   playerFilter = val;
   renderPlayers(val);
+}
+
+// ============================================================
+// ADD/EDIT/DELETE PLAYER
+// ============================================================
+
+let editingPlayerId = null;
+
+function openAddPlayer() {
+  editingPlayerId = null;
+  document.getElementById('player-modal-title').textContent = 'Spielerin hinzufügen';
+  document.getElementById('pl-delete-btn').style.display = 'none';
+  document.getElementById('pl-name').value = '';
+  document.getElementById('pl-number').value = '';
+  document.getElementById('pl-mother-name').value = '';
+  document.getElementById('pl-mother-phone').value = '';
+  document.getElementById('pl-father-name').value = '';
+  document.getElementById('pl-father-phone').value = '';
+  document.getElementById('player-modal').classList.add('open');
+}
+
+function openEditPlayer(id) {
+  const p = PLAYERS.find(x => x.id === id);
+  if (!p) return;
+  editingPlayerId = id;
+  document.getElementById('player-modal-title').textContent = 'Spielerin bearbeiten';
+  document.getElementById('pl-delete-btn').style.display = '';
+  document.getElementById('pl-name').value = p.name || '';
+  document.getElementById('pl-number').value = p.number || '';
+  document.getElementById('pl-mother-name').value = p.nameMother || '';
+  document.getElementById('pl-mother-phone').value = p.phone || '';
+  document.getElementById('pl-father-name').value = p.nameFather || '';
+  document.getElementById('pl-father-phone').value = p.phone2 || '';
+  document.getElementById('player-modal').classList.add('open');
+}
+
+function closePlayerModal() {
+  document.getElementById('player-modal').classList.remove('open');
+}
+
+function closePlayerModalOutside(e) {
+  if (e.target.id === 'player-modal') closePlayerModal();
+}
+
+function savePlayer() {
+  const name = document.getElementById('pl-name').value.trim();
+  if (!name) {
+    showToast('Bitte Name eingeben');
+    return;
+  }
+  const numberVal = document.getElementById('pl-number').value.trim();
+  const number = numberVal ? Number(numberVal) : undefined;
+  if (number && PLAYERS.some(p => p.number === number && p.id !== editingPlayerId)) {
+    showToast(`Nummer ${number} ist bereits vergeben`);
+    return;
+  }
+  const nameMother = document.getElementById('pl-mother-name').value.trim();
+  const phone      = document.getElementById('pl-mother-phone').value.trim();
+  const nameFather = document.getElementById('pl-father-name').value.trim();
+  const phone2     = document.getElementById('pl-father-phone').value.trim();
+  const lastName   = name.split(' ').slice(-1)[0];
+
+  const player = { id: editingPlayerId ?? Date.now(), name, parent: 'Familie ' + lastName, phone };
+  if (number)     player.number     = number;
+  if (nameMother) player.nameMother = nameMother;
+  if (phone2)     player.phone2     = phone2;
+  if (nameFather) player.nameFather = nameFather;
+
+  if (editingPlayerId) {
+    const idx = PLAYERS.findIndex(p => p.id === editingPlayerId);
+    if (idx > -1) PLAYERS[idx] = player;
+  } else {
+    PLAYERS.push(player);
+  }
+  savePlayersLocal();
+  apiPatch({ action: 'upsertPlayer', player });
+  closePlayerModal();
+  refreshChildSelect();
+  renderPlayers(playerFilter);
+  showToast('✅ Spielerin gespeichert!');
+}
+
+function deleteCurrentPlayer() {
+  if (!editingPlayerId) return;
+  const p = PLAYERS.find(x => x.id === editingPlayerId);
+  if (!p) return;
+  if (!confirm(`${p.name} wirklich löschen?`)) return;
+  const deletedId = editingPlayerId;
+  PLAYERS = PLAYERS.filter(x => x.id !== deletedId);
+  savePlayersLocal();
+  apiPatch({ action: 'deletePlayer', playerId: deletedId });
+  closePlayerModal();
+  refreshChildSelect();
+  renderPlayers(playerFilter);
+  showToast('Spielerin gelöscht');
+}
+
+// ============================================================
+// SEASON-EXPORT (CSV / Excel)
+// ============================================================
+
+function exportSeasonStats() {
+  const trainings   = state.events.filter(e => e.type === 'training').sort((a, b) => new Date(a.date) - new Date(b.date));
+  const tournaments = state.events.filter(e => e.type === 'tournament').sort((a, b) => new Date(a.date) - new Date(b.date));
+  const pastTrainings   = trainings.filter(e => isPast(e.date));
+  const pastTournaments = tournaments.filter(e => isPast(e.date));
+  const statusLabel = { coming: 'Ja', absent: 'Nein', injured: 'Verletzt', open: '-' };
+  const shortDate = dateStr => {
+    const d = new Date(dateStr);
+    return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.`;
+  };
+
+  const headers = [
+    'Name', 'Nummer',
+    ...trainings.map(e => `Training ${shortDate(e.date)}`),
+    ...tournaments.map(e => `Turnier ${shortDate(e.date)}`),
+    'Trainings-Quote', 'Turnier-Aufgebote',
+  ];
+
+  const rows = PLAYERS.map(p => {
+    const trnCount = pastTrainings.filter(e => getStatus(e.id, p.id) === 'coming').length;
+    const trnPct = pastTrainings.length ? Math.round(trnCount / pastTrainings.length * 100) + '%' : '-';
+    const played = getSquadInCount(p.id);
+    return [
+      p.name,
+      p.number || '',
+      ...trainings.map(e => statusLabel[getStatus(e.id, p.id)] || '-'),
+      ...tournaments.map(e => statusLabel[getStatus(e.id, p.id)] || '-'),
+      trnPct,
+      played,
+    ];
+  });
+
+  const escapeCsv = v => {
+    const s = String(v ?? '');
+    return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(escapeCsv).join(';')).join('\r\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Saison-Statistik_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('📊 Statistik exportiert!');
 }
 
 // ============================================================
