@@ -21,7 +21,7 @@ function loginPage(showError) {
   .side-art.left { left:0; right:calc(50% + 180px); }
   .side-art.right { left:calc(50% + 180px); right:0; }
   @media (min-width: 600px) { .side-art { display:block; } }
-  .wrap { padding:0 24px; max-width:360px; width:100%; box-sizing:border-box; text-align:center; position:relative; z-index:1; }
+  .wrap { padding:0 24px; margin-top:8vh; max-width:360px; width:100%; box-sizing:border-box; text-align:center; position:relative; z-index:1; }
   .card { background:white; border-radius:20px; padding:32px 24px; box-shadow:0 8px 32px rgba(15,23,42,0.12); border:2px solid #3B82F6; text-align:left; margin-top:16px; }
   .card-header { display:flex; align-items:center; justify-content:flex-start; gap:14px; margin-bottom:20px; }
   .card-header-icon { font-size:32px; }
