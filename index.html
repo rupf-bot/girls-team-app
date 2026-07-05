@@ -2828,7 +2828,7 @@ function renderPlayers(filter = '') {
             </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-            <button onclick="openEditPlayer(${p.id})" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:15px;cursor:pointer;padding:0 0 2px">✎</button>
+            <button onclick="openEditPlayer(${p.id})" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:22px;line-height:1;cursor:pointer;padding:6px;margin:-6px -6px -4px 0">✎</button>
             <span style="font-size:14px;font-weight:700;color:var(--brand-blue)">⚽ ${trn}/${pastTrainings.length} (${trnPct} %)</span>
             <span style="font-size:14px;font-weight:700;color:var(--bordeaux)">🏆 ${played}/${pastTournaments.length}</span>
             <span class="status-badge ${healthClass}">${healthLabel}</span>
@@ -2847,7 +2847,7 @@ function renderPlayers(filter = '') {
             <div class="player-name">${s.name}</div>
             <div class="player-sub">${s.role}</div>
           </div>
-          <button onclick="openEditStaff('${s.id}')" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:15px;cursor:pointer;padding:4px">✎</button>
+          <button onclick="openEditStaff('${s.id}')" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:22px;line-height:1;cursor:pointer;padding:10px">✎</button>
           ${s.phone ? `<a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>` : ''}
         </div>`).join('')}
       ${!staffFiltered.length ? '<div style="padding:8px 4px;color:var(--gray-500);font-size:13px">Kein Trainer gefunden</div>' : ''}
