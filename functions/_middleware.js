@@ -17,6 +17,7 @@ function loginPage(showError) {
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
   .card { background:white; border-radius:16px; padding:32px 28px; max-width:340px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center; }
+  .card img { height:72px; width:auto; margin-bottom:16px; }
   h1 { font-size:18px; margin:0 0 6px; color:#1a1a2e; }
   p { color:#666; font-size:14px; margin:0 0 20px; }
   input { width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid #ddd; border-radius:10px; font-size:16px; margin-bottom:12px; }
@@ -26,6 +27,7 @@ function loginPage(showError) {
 </style></head>
 <body>
   <div class="card">
+    <img src="/SVH-Logo-transparent.png" alt="SV Höngg">
     <h1>SV Höngg Juniorinnen Ema</h1>
     <p>Bitte Team-Passwort eingeben</p>
     <form method="POST">
@@ -37,8 +39,19 @@ function loginPage(showError) {
 </body></html>`;
 }
 
+const STATIC_ASSET_EXTENSIONS = /\.(png|jpg|jpeg|svg|webp|ico|gif)$/i;
+
 export async function onRequest(context) {
   const { request, env, next } = context;
+  const url = new URL(request.url);
+
+  // Statische Bild-Dateien (z.B. Vereinslogo) dürfen auch ohne gültiges Auth-Cookie
+  // geladen werden, damit das Logo bereits auf dem Passwort-Screen sichtbar ist.
+  // Enthält keine sensiblen Daten, daher unkritisch.
+  if (request.method === 'GET' && STATIC_ASSET_EXTENSIONS.test(url.pathname)) {
+    return next();
+  }
+
   const cookieHeader = request.headers.get('Cookie') || '';
   const hasValidCookie = cookieHeader.split(';').some(c => c.trim() === `${COOKIE_NAME}=ok`);
 
