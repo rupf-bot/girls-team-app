@@ -16,21 +16,27 @@ function loginPage(showError) {
 <title>SV Höngg Juniorinnen Ema</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; }
-  .wrap { padding:0 24px; max-width:360px; width:100%; box-sizing:border-box; text-align:center; }
-  .card { background:white; border-radius:20px; padding:32px 24px; box-shadow:0 8px 32px rgba(15,23,42,0.12); border:2px solid #3B82F6; text-align:center; margin-top:16px; }
-  .card-header { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:20px; }
+  .side-art { position:fixed; top:0; bottom:0; background-image:url('/Group%2062.svg'); background-size:cover; background-position:center; z-index:0; display:none; }
+  .side-art.left { left:0; right:calc(50% + 180px); }
+  .side-art.right { left:calc(50% + 180px); right:0; }
+  @media (min-width: 600px) { .side-art { display:block; } }
+  .wrap { padding:0 24px; max-width:360px; width:100%; box-sizing:border-box; text-align:center; position:relative; z-index:1; }
+  .card { background:white; border-radius:20px; padding:32px 24px; box-shadow:0 8px 32px rgba(15,23,42,0.12); border:2px solid #3B82F6; text-align:left; margin-top:16px; }
+  .card-header { display:flex; align-items:center; justify-content:flex-start; gap:14px; margin-bottom:20px; }
   .card-header-icon { font-size:32px; }
   h1 { font-size:18px; font-weight:700; margin:0; color:#0F172A; }
-  p { color:#64748B; font-size:14px; margin:0 0 28px; }
+  p { color:#64748B; font-size:14px; margin:0 0 28px; text-align:left; }
   input { width:100%; box-sizing:border-box; height:48px; padding:0 14px; border:1.5px solid #E2E8F0; border-radius:12px; font-size:15px; background:#F8FAFC; color:#0F172A; margin-bottom:12px; -webkit-appearance:none; appearance:none; transition:border-color 0.15s; }
   input:focus { outline:none; border-color:#3B82F6; background:white; box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
   button { width:100%; height:48px; border:none; border-radius:12px; background:#3B82F6; color:white; font-size:16px; font-weight:700; cursor:pointer; transition:transform 0.1s; }
   button:active { transform:scale(0.97); }
-  .err { color:#EF4444; font-size:13px; margin-bottom:12px; text-align:center; }
+  .err { color:#EF4444; font-size:13px; margin-bottom:12px; text-align:left; }
   .logo { height:103px; width:auto; margin-top:24px; }
   .logo-top { height:104px; width:auto; margin:0 auto 32px; display:block; }
 </style></head>
 <body>
+  <div class="side-art left"></div>
+  <div class="side-art right"></div>
   <div class="wrap">
     <img class="logo-top" src="/Group%2061%20(1).svg" alt="SV Höngg seit 1941">
     <div class="card">
