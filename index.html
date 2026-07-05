@@ -2127,7 +2127,14 @@ function renderWeeklyTrend() {
   const wrap = document.getElementById('coach-trend-wrap');
   if (!wrap) return;
   const data = getWeeklyTrainingTrend(8);
-  if (data.length < 2) { wrap.innerHTML = ''; return; }
+  if (data.length < 2) {
+    wrap.innerHTML = `
+      <div class="stat-card" style="background:var(--gray-150);padding:14px 12px">
+        <div class="stat-label" style="margin-bottom:2px">Trainingsbeteiligung pro Woche</div>
+        <div class="stat-label" style="margin-top:0">Noch keine Daten – erscheint sobald 2 Trainingswochen absolviert sind</div>
+      </div>`;
+    return;
+  }
   const bars = data.map(w => {
     const barHeight = Math.max(6, Math.round(w.pct / 100 * 60));
     const label = `${String(w.weekStart.getDate()).padStart(2, '0')}.${String(w.weekStart.getMonth() + 1).padStart(2, '0')}.`;
