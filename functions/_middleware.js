@@ -15,15 +15,16 @@ function loginPage(showError) {
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SV Höngg Juniorinnen Ema</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
-  .card { background:white; border-radius:16px; padding:32px 28px; max-width:340px; width:90%; box-shadow:0 4px 24px rgba(0,0,0,0.08); text-align:center; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; }
+  .card { background:white; border-radius:20px; padding:32px 24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(15,23,42,0.12); text-align:center; }
   .card img { height:72px; width:auto; margin-bottom:16px; }
-  h1 { font-size:18px; margin:0 0 6px; color:#1a1a2e; }
-  p { color:#666; font-size:14px; margin:0 0 20px; }
-  input { width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid #ddd; border-radius:10px; font-size:16px; margin-bottom:12px; }
-  input:focus { outline:none; border-color:#3B82F6; }
-  button { width:100%; padding:12px; border:none; border-radius:10px; background:#3B82F6; color:white; font-size:16px; font-weight:700; cursor:pointer; }
-  .err { color:#DC2626; font-size:13px; margin-bottom:12px; }
+  h1 { font-size:18px; font-weight:700; margin:0 0 6px; color:#0F172A; }
+  p { color:#64748B; font-size:14px; margin:0 0 28px; }
+  input { width:100%; box-sizing:border-box; height:48px; padding:0 14px; border:1.5px solid #E2E8F0; border-radius:12px; font-size:15px; background:#F8FAFC; color:#0F172A; margin-bottom:12px; -webkit-appearance:none; appearance:none; transition:border-color 0.15s; }
+  input:focus { outline:none; border-color:#3B82F6; background:white; }
+  button { width:100%; height:48px; border:none; border-radius:12px; background:#3B82F6; color:white; font-size:16px; font-weight:700; cursor:pointer; transition:transform 0.1s; }
+  button:active { transform:scale(0.97); }
+  .err { color:#EF4444; font-size:13px; margin-bottom:12px; text-align:center; }
 </style></head>
 <body>
   <div class="card">
