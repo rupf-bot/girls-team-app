@@ -26,9 +26,11 @@ function loginPage(showError) {
   button:active { transform:scale(0.97); }
   .err { color:#EF4444; font-size:13px; margin-bottom:12px; text-align:center; }
   .logo { height:103px; width:auto; margin-top:24px; }
+  .logo-top { height:104px; width:auto; margin:0 auto 32px; display:block; }
 </style></head>
 <body>
   <div class="wrap">
+    <img class="logo-top" src="/Group%2061%20(1).svg" alt="SV Höngg seit 1941">
     <h1>SV Höngg Juniorinnen Ema</h1>
     <div class="card">
       <p>Bitte Team-Passwort eingeben</p>
