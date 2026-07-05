@@ -16,7 +16,7 @@ function loginPage(showError) {
 <title>SV Höngg Juniorinnen Ema</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; }
-  .card { background:white; border-radius:20px; padding:32px 24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(15,23,42,0.12); text-align:center; }
+  .card { background:white; border-radius:20px; padding:32px 24px; max-width:340px; width:90%; box-shadow:0 8px 32px rgba(15,23,42,0.12); border:2px solid #3B82F6; text-align:center; }
   .card img { height:72px; width:auto; margin-bottom:16px; }
   h1 { font-size:18px; font-weight:700; margin:0 0 6px; color:#0F172A; }
   p { color:#64748B; font-size:14px; margin:0 0 28px; }
