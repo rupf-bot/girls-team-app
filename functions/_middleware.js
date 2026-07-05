@@ -17,8 +17,10 @@ function loginPage(showError) {
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; }
   .wrap { padding:0 24px; max-width:360px; width:100%; box-sizing:border-box; text-align:center; }
-  h1 { font-size:18px; font-weight:700; margin:0 0 6px; color:#0F172A; }
   .card { background:white; border-radius:20px; padding:32px 24px; box-shadow:0 8px 32px rgba(15,23,42,0.12); border:2px solid #3B82F6; text-align:center; margin-top:16px; }
+  .card-header { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:20px; }
+  .card-header-icon { font-size:32px; }
+  h1 { font-size:18px; font-weight:700; margin:0; color:#0F172A; }
   p { color:#64748B; font-size:14px; margin:0 0 28px; }
   input { width:100%; box-sizing:border-box; height:48px; padding:0 14px; border:1.5px solid #E2E8F0; border-radius:12px; font-size:15px; background:#F8FAFC; color:#0F172A; margin-bottom:12px; -webkit-appearance:none; appearance:none; transition:border-color 0.15s; }
   input:focus { outline:none; border-color:#3B82F6; background:white; box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
@@ -31,8 +33,11 @@ function loginPage(showError) {
 <body>
   <div class="wrap">
     <img class="logo-top" src="/Group%2061%20(1).svg" alt="SV Höngg seit 1941">
-    <h1>SV Höngg Juniorinnen Ema</h1>
     <div class="card">
+      <div class="card-header">
+        <div class="card-header-icon">⚽</div>
+        <h1>SV Höngg Juniorinnen Ema</h1>
+      </div>
       <p>Bitte Team-Passwort eingeben</p>
       <form method="POST">
         ${showError ? '<div class="err">Falsches Passwort</div>' : ''}
