@@ -15,7 +15,8 @@ function loginPage(showError) {
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SV Höngg Juniorinnen Ema</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; }
+  html, body { height:100%; overscroll-behavior:none; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; min-height:100dvh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; overflow:hidden; }
   .side-art { position:fixed; top:0; bottom:0; background-image:url('/Group%2062.svg'); background-size:cover; background-position:center; z-index:0; display:none; }
   .side-art.left { left:0; right:calc(50% + 180px); }
   .side-art.right { left:calc(50% + 180px); right:0; }

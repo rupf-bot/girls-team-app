@@ -49,15 +49,18 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
     color: var(--navy);
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
   }
 
   #app {
     max-width: 480px;
     margin: 0 auto;
     min-height: 100vh;
+    min-height: 100dvh;
     background: var(--page-bg);
     position: relative;
     overflow-x: hidden;
+    overscroll-behavior: none;
   }
 
   /* ─── PAGE SYSTEM ─── */
@@ -220,12 +223,14 @@
   #page-login {
     background: var(--page-bg);
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
     padding: 0;
     overflow-y: hidden;
+    overscroll-behavior: none;
   }
   .login-flag-hero {
     width: 100%;
