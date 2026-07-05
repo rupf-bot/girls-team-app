@@ -5,6 +5,7 @@
 // Keys:
 //   ev:<eventId>                 → JSON einzelnes Event {id,type,date,location,title,plan?}
 //   pl:<playerId>                → JSON einzelne Spielerin {id,name,parent,phone,nameMother?,phone2?,nameFather?,number?}
+//   sf:<staffId>                 → JSON einzelnes Trainer-Team-Mitglied {id,name,role,phone,hasAttendance,photo?}
 //   att:<eventId>:<playerId>     → Anwesenheits-Status ('coming'|'absent'|'injured')
 //   sq:<eventId>:<playerId>      → Aufgebot-Status ('in'|'out')
 //   staff:<eventId>:<staffId>    → Staff-Status ('coming'|'absent'|'injured')
@@ -27,6 +28,10 @@ function isFiniteId(v) {
   return Number.isFinite(n);
 }
 
+function isNonEmptyStringId(v) {
+  return typeof v === 'string' && v.length > 0;
+}
+
 async function listAll(kv, prefix) {
   const out = [];
   let cursor;
@@ -39,9 +44,10 @@ async function listAll(kv, prefix) {
 }
 
 async function buildState(kv) {
-  const [evKeys, plKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
+  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
     listAll(kv, 'ev:'),
     listAll(kv, 'pl:'),
+    listAll(kv, 'sf:'),
     listAll(kv, 'att:'),
     listAll(kv, 'sq:'),
     listAll(kv, 'staff:'),
@@ -49,6 +55,7 @@ async function buildState(kv) {
 
   const events = (await Promise.all(evKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
   const players = (await Promise.all(plKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
+  const staff = (await Promise.all(sfKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
 
   const attendance = {};
   await Promise.all(attKeys.map(async k => {
@@ -77,7 +84,7 @@ async function buildState(kv) {
     staffAttendance[eventId][staffId] = status;
   }));
 
-  return { events, players, attendance, squad, staffAttendance };
+  return { events, players, staff, attendance, squad, staffAttendance };
 }
 
 async function rebuildCache(kv) {
@@ -204,6 +211,46 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'players ungültig' }), { status: 400 });
     }
     await Promise.all(players.map(p => kv.put(`pl:${p.id}`, JSON.stringify(p))));
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'upsertStaff') {
+    const { staff } = body;
+    if (!staff || !isNonEmptyStringId(staff.id) || !staff.name) {
+      return new Response(JSON.stringify({ error: 'staff ungültig' }), { status: 400 });
+    }
+    await kv.put(`sf:${staff.id}`, JSON.stringify(staff));
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'deleteStaff') {
+    const { staffId } = body;
+    if (!isNonEmptyStringId(staffId)) {
+      return new Response(JSON.stringify({ error: 'staffId ungültig' }), { status: 400 });
+    }
+    const staffAttKeys = await listAll(kv, 'staff:');
+    const matches = staffAttKeys.filter(k => k.name.split(':')[2] === String(staffId));
+    await Promise.all([
+      kv.delete(`sf:${staffId}`),
+      ...matches.map(k => kv.delete(k.name)),
+    ]);
+    await rebuildCache(kv);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'bootstrapStaff') {
+    // Nur schreiben, falls server-seitig noch kein Trainer-Team existiert (erster Start).
+    const existing = await listAll(kv, 'sf:');
+    if (existing.length > 0) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }));
+    }
+    const { staff } = body;
+    if (!Array.isArray(staff)) {
+      return new Response(JSON.stringify({ error: 'staff ungültig' }), { status: 400 });
+    }
+    await Promise.all(staff.map(s => kv.put(`sf:${s.id}`, JSON.stringify(s))));
     await rebuildCache(kv);
     return new Response(JSON.stringify({ ok: true }));
   }

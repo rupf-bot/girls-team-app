@@ -1261,8 +1261,8 @@
         </button>
       </div>
       <div class="section-label">Team</div>
-      <div style="padding:0 20px 4px">
-        <button onclick="openAddPlayer()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);border:none;border-radius:12px;padding:14px;font-size:13px;font-weight:800;color:white;cursor:pointer">+ Spielerin hinzufügen</button>
+      <div style="padding:0 20px 20px">
+        <button onclick="openAddPlayer()" style="width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);color:white;font-weight:700;font-size:13px;cursor:pointer">+ Spielerin hinzufügen</button>
       </div>
     </div>
   </div>
@@ -1506,6 +1506,39 @@
     </div>
   </div>
 
+  <!-- ADD/EDIT STAFF MODAL -->
+  <div class="modal-overlay" id="staff-modal" onclick="closeStaffModalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="modal-title" id="staff-modal-title" style="margin-bottom:0">Trainer hinzufügen</div>
+        <button id="sf-delete-btn" onclick="deleteCurrentStaff()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input class="form-input" type="text" id="sf-name" placeholder="Vorname Nachname">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rolle</label>
+        <input class="form-input" type="text" id="sf-role" placeholder="z. B. Trainer">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon</label>
+        <input class="form-input" type="tel" id="sf-phone" placeholder="optional">
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="sf-attendance" style="width:18px;height:18px">
+        <label class="form-label" for="sf-attendance" style="margin:0">Nimmt an Trainings/Turnieren teil (Anwesenheit erfassen)</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeStaffModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveStaffMember()" style="margin-top:0">Speichern</button>
+      </div>
+    </div>
+  </div>
+
   <!-- TRAINING PLAN MODAL -->
   <div class="modal-overlay" id="training-plan-modal" onclick="closeTrainingPlanModalOutside(event)">
     <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
@@ -1555,7 +1588,7 @@ let PLAYERS = [
   { id: 20, name: 'Yael Zogg',              parent: 'Familie Zogg',          phone: '079 361 10 86', nameMother: 'Tatjana', number: 21 },
 ];
 
-const STAFF = [
+let STAFF = [
   { id: 's1', name: 'Marcel Rupf',  role: 'Trainer',              phone: '079 245 78 71', hasAttendance: true, photo: 'marcel-portrait.jpg' },
   { id: 's2', name: 'Irwan Burger', role: 'Trainer',              phone: '079 637 08 61', hasAttendance: true },
   { id: 's3', name: 'Kilian Fanger', role: 'Chef Frauenabteilung', phone: '079 382 36 32', hasAttendance: false },
@@ -1703,6 +1736,11 @@ function loadState() {
       const parsedPlayers = JSON.parse(savedPlayers);
       if (Array.isArray(parsedPlayers) && parsedPlayers.length) PLAYERS = parsedPlayers;
     }
+    const savedStaff = localStorage.getItem('girlsfc_staff');
+    if (savedStaff) {
+      const parsedStaff = JSON.parse(savedStaff);
+      if (Array.isArray(parsedStaff) && parsedStaff.length) STAFF = parsedStaff;
+    }
   } catch(e) {}
 
   if (!state.events.length) {
@@ -1789,6 +1827,14 @@ async function syncFromServer(rerender = true) {
       apiPatch({ action: 'bootstrapPlayers', players: PLAYERS });
     }
 
+    if (data.staff && data.staff.length) {
+      STAFF = data.staff;
+      saveStaffLocal();
+    } else if (STAFF.length) {
+      // Server noch leer (allererster Start) — lokales Trainer Team übernehmen
+      apiPatch({ action: 'bootstrapStaff', staff: STAFF });
+    }
+
     pruneObsoleteEvents();
     if (!state.events.length) {
       state.events = [...generateTrainings(), ...generateTournaments()];
@@ -1832,6 +1878,10 @@ function saveState() {
 
 function savePlayersLocal() {
   localStorage.setItem('girlsfc_players', JSON.stringify(PLAYERS));
+}
+
+function saveStaffLocal() {
+  localStorage.setItem('girlsfc_staff', JSON.stringify(STAFF));
 }
 
 function initDefaultAttendance() {
@@ -2693,8 +2743,10 @@ function renderPlayers(filter = '') {
           </div>
         </div>`;}).join('')}
     </div>
-    ${staffFiltered.length ? `
-    <div class="player-section-title" style="padding:20px 20px 10px">Trainer Team</div>
+    <div class="player-section-title" style="padding:20px 20px 10px;display:flex;align-items:center;justify-content:space-between">
+      <span>Trainer Team</span>
+      <button onclick="openAddStaff()" style="border:none;background:var(--brand-blue);color:white;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer">+ Trainer</button>
+    </div>
     <div style="padding:0 16px 100px;display:flex;flex-direction:column;gap:8px">
       ${staffFiltered.map(s => `
         <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:12px 14px">
@@ -2703,9 +2755,11 @@ function renderPlayers(filter = '') {
             <div class="player-name">${s.name}</div>
             <div class="player-sub">${s.role}</div>
           </div>
-          <a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>
+          <button onclick="openEditStaff('${s.id}')" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:15px;cursor:pointer;padding:4px">✎</button>
+          ${s.phone ? `<a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>` : ''}
         </div>`).join('')}
-    </div>` : ''}`;
+      ${!staffFiltered.length ? '<div style="padding:8px 4px;color:var(--gray-500);font-size:13px">Kein Trainer gefunden</div>' : ''}
+    </div>`;
   document.getElementById('players-footer').textContent = `${filtered.length} von ${PLAYERS.length} Spielerinnen`;
 }
 
@@ -2807,6 +2861,85 @@ function deleteCurrentPlayer() {
   refreshChildSelect();
   renderPlayers(playerFilter);
   showToast('Spielerin gelöscht');
+}
+
+// ============================================================
+// ADD/EDIT/DELETE TRAINER (STAFF)
+// ============================================================
+
+let editingStaffId = null;
+
+function openAddStaff() {
+  editingStaffId = null;
+  document.getElementById('staff-modal-title').textContent = 'Trainer hinzufügen';
+  document.getElementById('sf-delete-btn').style.display = 'none';
+  document.getElementById('sf-name').value = '';
+  document.getElementById('sf-role').value = '';
+  document.getElementById('sf-phone').value = '';
+  document.getElementById('sf-attendance').checked = false;
+  document.getElementById('staff-modal').classList.add('open');
+}
+
+function openEditStaff(id) {
+  const s = STAFF.find(x => x.id === id);
+  if (!s) return;
+  editingStaffId = id;
+  document.getElementById('staff-modal-title').textContent = 'Trainer bearbeiten';
+  document.getElementById('sf-delete-btn').style.display = '';
+  document.getElementById('sf-name').value = s.name || '';
+  document.getElementById('sf-role').value = s.role || '';
+  document.getElementById('sf-phone').value = s.phone || '';
+  document.getElementById('sf-attendance').checked = !!s.hasAttendance;
+  document.getElementById('staff-modal').classList.add('open');
+}
+
+function closeStaffModal() {
+  document.getElementById('staff-modal').classList.remove('open');
+}
+
+function closeStaffModalOutside(e) {
+  if (e.target.id === 'staff-modal') closeStaffModal();
+}
+
+function saveStaffMember() {
+  const name = document.getElementById('sf-name').value.trim();
+  const role = document.getElementById('sf-role').value.trim();
+  if (!name || !role) {
+    showToast('Bitte Name und Rolle eingeben');
+    return;
+  }
+  const phone = document.getElementById('sf-phone').value.trim();
+  const hasAttendance = document.getElementById('sf-attendance').checked;
+  const existing = editingStaffId ? STAFF.find(x => x.id === editingStaffId) : null;
+
+  const staffMember = { id: editingStaffId ?? ('s' + Date.now()), name, role, phone, hasAttendance };
+  if (existing && existing.photo) staffMember.photo = existing.photo;
+
+  if (editingStaffId) {
+    const idx = STAFF.findIndex(x => x.id === editingStaffId);
+    if (idx > -1) STAFF[idx] = staffMember;
+  } else {
+    STAFF.push(staffMember);
+  }
+  saveStaffLocal();
+  apiPatch({ action: 'upsertStaff', staff: staffMember });
+  closeStaffModal();
+  renderPlayers(playerFilter);
+  showToast('✅ Trainer gespeichert!');
+}
+
+function deleteCurrentStaff() {
+  if (!editingStaffId) return;
+  const s = STAFF.find(x => x.id === editingStaffId);
+  if (!s) return;
+  if (!confirm(`${s.name} wirklich löschen?`)) return;
+  const deletedId = editingStaffId;
+  STAFF = STAFF.filter(x => x.id !== deletedId);
+  saveStaffLocal();
+  apiPatch({ action: 'deleteStaff', staffId: deletedId });
+  closeStaffModal();
+  renderPlayers(playerFilter);
+  showToast('Trainer gelöscht');
 }
 
 // ============================================================
