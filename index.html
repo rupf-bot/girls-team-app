@@ -2819,6 +2819,7 @@ function exportSeasonStats() {
   const pastTrainings   = trainings.filter(e => isPast(e.date));
   const pastTournaments = tournaments.filter(e => isPast(e.date));
   const statusLabel = { coming: 'Ja', absent: 'Nein', injured: 'Verletzt', open: '-' };
+  const statusStyle = { coming: 's-ja', absent: 's-nein', injured: 's-verletzt', open: 's-open' };
   const shortDate = dateStr => {
     const d = new Date(dateStr);
     return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.`;
@@ -2831,31 +2832,63 @@ function exportSeasonStats() {
     'Trainings-Quote', 'Turnier-Aufgebote',
   ];
 
+  // { value, style? } pro Zelle — style bestimmt die Excel-Zellfarbe
   const rows = PLAYERS.map(p => {
     const trnCount = pastTrainings.filter(e => getStatus(e.id, p.id) === 'coming').length;
     const trnPct = pastTrainings.length ? Math.round(trnCount / pastTrainings.length * 100) + '%' : '-';
     const played = getSquadInCount(p.id);
+    const statusCell = ev => {
+      const st = getStatus(ev.id, p.id);
+      return { value: statusLabel[st] || '-', style: statusStyle[st] || 's-open' };
+    };
     return [
-      p.name,
-      p.number || '',
-      ...trainings.map(e => statusLabel[getStatus(e.id, p.id)] || '-'),
-      ...tournaments.map(e => statusLabel[getStatus(e.id, p.id)] || '-'),
-      trnPct,
-      played,
+      { value: p.name },
+      { value: p.number || '' },
+      ...trainings.map(statusCell),
+      ...tournaments.map(statusCell),
+      { value: trnPct },
+      { value: played },
     ];
   });
 
-  const escapeCsv = v => {
-    const s = String(v ?? '');
-    return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
-  const csv = '\uFEFF' + [headers, ...rows].map(row => row.map(escapeCsv).join(';')).join('\r\n');
+  const xmlEscape = v => String(v ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const cellXml = (cell, isHeader) => {
+    const style = isHeader ? 's-header' : (cell.style || '');
+    const styleAttr = style ? ` ss:StyleID="${style}"` : '';
+    return `<Cell${styleAttr}><Data ss:Type="String">${xmlEscape(cell.value)}</Data></Cell>`;
+  };
+
+  const headerRow = `<Row>${headers.map(h => cellXml({ value: h }, true)).join('')}</Row>`;
+  const dataRows = rows.map(row => `<Row>${row.map(c => cellXml(c, false)).join('')}</Row>`).join('');
+
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="s-header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#2563EB" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="s-ja"><Font ss:Color="#006100"/><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="s-nein"><Font ss:Color="#9C0006"/><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="s-verletzt"><Font ss:Color="#9C6500"/><Interior ss:Color="#FFEB9C" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="s-open"><Font ss:Color="#666666"/><Interior ss:Color="#F2F2F2" ss:Pattern="Solid"/></Style>
+ </Styles>
+ <Worksheet ss:Name="Saison-Statistik">
+  <Table>
+   ${headerRow}
+   ${dataRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `Saison-Statistik_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `Saison-Statistik_${new Date().toISOString().split('T')[0]}.xls`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
