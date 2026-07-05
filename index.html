@@ -1257,6 +1257,7 @@
     <div class="scroll-content">
       <div class="section-label">Statistik</div>
       <div class="stats-row" id="coach-stats"></div>
+      <div id="coach-trend-wrap" style="padding:4px 20px 0"></div>
       <div style="padding:12px 20px 4px">
         <button onclick="exportSeasonStats()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gray-150);border:none;border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer">📊 Statistik exportieren (Excel)</button>
       </div>
@@ -2097,6 +2098,55 @@ function getPastEvents() {
   return state.events.filter(e => new Date(e.date) < now).reverse();
 }
 
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr);
+  const mondayOffset = (d.getDay() + 6) % 7; // Mo=0 ... So=6
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - mondayOffset);
+  return monday;
+}
+
+function getWeeklyTrainingTrend(maxWeeks = 8) {
+  const now = new Date();
+  const pastTrainings = state.events.filter(e => e.type === 'training' && new Date(e.date) < now);
+  const groups = {};
+  pastTrainings.forEach(ev => {
+    const weekStart = getWeekStart(ev.date);
+    const key = weekStart.getTime();
+    if (!groups[key]) groups[key] = { weekStart, events: [] };
+    groups[key].events.push(ev);
+  });
+  const weeks = Object.values(groups).sort((a, b) => a.weekStart - b.weekStart);
+  return weeks.slice(-maxWeeks).map(w => {
+    const total = w.events.reduce((sum, ev) => sum + getAttendanceCount(ev.id), 0);
+    const pct = PLAYERS.length ? Math.round(total / (w.events.length * PLAYERS.length) * 100) : 0;
+    return { weekStart: w.weekStart, pct };
+  });
+}
+
+function renderWeeklyTrend() {
+  const wrap = document.getElementById('coach-trend-wrap');
+  if (!wrap) return;
+  const data = getWeeklyTrainingTrend(8);
+  if (data.length < 2) { wrap.innerHTML = ''; return; }
+  const bars = data.map(w => {
+    const barHeight = Math.max(6, Math.round(w.pct / 100 * 60));
+    const label = `${String(w.weekStart.getDate()).padStart(2, '0')}.${String(w.weekStart.getMonth() + 1).padStart(2, '0')}.`;
+    return `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-size:10px;font-weight:700;color:var(--navy)">${w.pct}%</div>
+        <div style="width:100%;max-width:22px;height:60px;display:flex;align-items:flex-end">
+          <div style="width:100%;height:${barHeight}px;background:linear-gradient(180deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%);border-radius:4px 4px 0 0"></div>
+        </div>
+        <div style="font-size:9px;color:var(--gray-500)">${label}</div>
+      </div>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="stat-card" style="background:var(--gray-150);padding:14px 12px 10px">
+      <div class="stat-label" style="margin-bottom:10px">Trainingsbeteiligung pro Woche</div>
+      <div style="display:flex;align-items:flex-end;gap:6px">${bars}</div>
+    </div>`;
+}
+
 function getNextEvent() {
   return getUpcomingEvents(1)[0] || null;
 }
@@ -2351,6 +2401,7 @@ function renderStats() {
         <div class="stat-label" style="color:rgba(255,255,255,0.8)">Ø Turnier</div>
       </div>
     </div>`;
+  renderWeeklyTrend();
 }
 
 function renderRecentEvents() {
