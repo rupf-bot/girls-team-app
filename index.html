@@ -768,15 +768,27 @@
     margin: 0 auto;
     background: white;
     border-radius: 24px 24px 0 0;
-    padding: 24px 24px 40px;
-    max-height: 85vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    max-height: 100vh;
+    max-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .modal-overlay.open .modal-sheet {
     transform: translateY(0);
+  }
+  .modal-header {
+    flex: 0 0 auto;
+    padding: 20px 24px 4px;
+  }
+  .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 24px 40px;
   }
   .modal-handle {
     width: 40px;
@@ -785,17 +797,9 @@
     border-radius: 2px;
     margin: 0 auto 20px;
   }
-  .modal-title {
-    font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 20px;
-    position: sticky; top: 0; z-index: 2; background: white;
-    margin-top: -48px; padding: 48px 0 12px;
-  }
-  .modal-title-row {
-    position: sticky; top: 0; z-index: 2; background: white;
-    margin-top: -48px; padding: 48px 0 12px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .modal-title-row .modal-title { position: static; margin: 0; padding: 0; top: auto; }
+  .modal-title { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
+  .modal-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title-row .modal-title { margin-bottom: 0; }
   .form-group { margin-bottom: 16px; }
   .form-label {
     display: block;
@@ -1434,23 +1438,27 @@
   <!-- ADD TRAINING MODAL -->
   <div class="modal-overlay" id="training-modal" onclick="closeTrainingModalOutside(event)">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Training hinzufügen</div>
-      <div class="form-group">
-        <label class="form-label">Datum</label>
-        <input class="form-input" type="date" id="tr-date">
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Training hinzufügen</div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Uhrzeit</label>
-        <input class="form-input" type="time" id="tr-time" value="17:30">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ort / Adresse</label>
-        <input class="form-input" type="text" id="tr-location" placeholder="z. B. Sportanlage Hönggerberg">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeTrainingModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="saveTraining()" style="margin-top:0">Speichern</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input class="form-input" type="date" id="tr-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Uhrzeit</label>
+          <input class="form-input" type="time" id="tr-time" value="17:30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ort / Adresse</label>
+          <input class="form-input" type="text" id="tr-location" placeholder="z. B. Sportanlage Hönggerberg">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeTrainingModal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="saveTraining()" style="margin-top:0">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1458,23 +1466,27 @@
   <!-- ADD TOURNAMENT MODAL -->
   <div class="modal-overlay" id="tournament-modal" onclick="closeModalOutside(event)">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title" id="tournament-modal-title">Turnier hinzufügen</div>
-      <div class="form-group">
-        <label class="form-label">Datum</label>
-        <input class="form-input" type="date" id="t-date">
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="tournament-modal-title">Turnier hinzufügen</div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Uhrzeit</label>
-        <input class="form-input" type="time" id="t-time" value="09:00">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Ort / Adresse</label>
-        <input class="form-input" type="text" id="t-location" placeholder="z. B. Sportanlage Hönggerberg">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeTournamentModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="saveTournament()" style="margin-top:0">Speichern</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Datum</label>
+          <input class="form-input" type="date" id="t-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Uhrzeit</label>
+          <input class="form-input" type="time" id="t-time" value="09:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ort / Adresse</label>
+          <input class="form-input" type="text" id="t-location" placeholder="z. B. Sportanlage Hönggerberg">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeTournamentModal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="saveTournament()" style="margin-top:0">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1482,40 +1494,44 @@
   <!-- ADD/EDIT PLAYER MODAL -->
   <div class="modal-overlay" id="player-modal" onclick="closePlayerModalOutside(event)">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title-row">
-        <div class="modal-title" id="player-modal-title">Spielerin hinzufügen</div>
-        <button id="pl-delete-btn" onclick="deleteCurrentPlayer()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title-row">
+          <div class="modal-title" id="player-modal-title">Spielerin hinzufügen</div>
+          <button id="pl-delete-btn" onclick="deleteCurrentPlayer()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Name</label>
-        <input class="form-input" type="text" id="pl-name" placeholder="Vorname Nachname">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Trikotnummer</label>
-        <input class="form-input" type="number" min="1" max="30" id="pl-number" placeholder="z. B. 7">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Name Mutter</label>
-        <input class="form-input" type="text" id="pl-mother-name" placeholder="optional">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telefon Mutter</label>
-        <input class="form-input" type="tel" id="pl-mother-phone" placeholder="optional">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Name Vater</label>
-        <input class="form-input" type="text" id="pl-father-name" placeholder="optional">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telefon Vater</label>
-        <input class="form-input" type="tel" id="pl-father-phone" placeholder="optional">
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closePlayerModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="savePlayer()" style="margin-top:0">Speichern</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="pl-name" placeholder="Vorname Nachname">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trikotnummer</label>
+          <input class="form-input" type="number" min="1" max="30" id="pl-number" placeholder="z. B. 7">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name Mutter</label>
+          <input class="form-input" type="text" id="pl-mother-name" placeholder="optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon Mutter</label>
+          <input class="form-input" type="tel" id="pl-mother-phone" placeholder="optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name Vater</label>
+          <input class="form-input" type="text" id="pl-father-name" placeholder="optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon Vater</label>
+          <input class="form-input" type="tel" id="pl-father-phone" placeholder="optional">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closePlayerModal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="savePlayer()" style="margin-top:0">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1523,49 +1539,57 @@
   <!-- ADD/EDIT STAFF MODAL -->
   <div class="modal-overlay" id="staff-modal" onclick="closeStaffModalOutside(event)">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div class="modal-title-row">
-        <div class="modal-title" id="staff-modal-title">Trainer hinzufügen</div>
-        <button id="sf-delete-btn" onclick="deleteCurrentStaff()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title-row">
+          <div class="modal-title" id="staff-modal-title">Trainer hinzufügen</div>
+          <button id="sf-delete-btn" onclick="deleteCurrentStaff()" style="display:none;background:none;border:none;padding:8px;cursor:pointer;color:var(--red)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Name</label>
-        <input class="form-input" type="text" id="sf-name" placeholder="Vorname Nachname">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Rolle</label>
-        <input class="form-input" type="text" id="sf-role" placeholder="z. B. Trainer">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telefon</label>
-        <input class="form-input" type="tel" id="sf-phone" placeholder="optional">
-      </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:8px">
-        <input type="checkbox" id="sf-attendance" style="width:18px;height:18px">
-        <label class="form-label" for="sf-attendance" style="margin:0">Nimmt an Trainings/Turnieren teil (Anwesenheit erfassen)</label>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeStaffModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="saveStaffMember()" style="margin-top:0">Speichern</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="sf-name" placeholder="Vorname Nachname">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rolle</label>
+          <input class="form-input" type="text" id="sf-role" placeholder="z. B. Trainer">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon</label>
+          <input class="form-input" type="tel" id="sf-phone" placeholder="optional">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="sf-attendance" style="width:18px;height:18px">
+          <label class="form-label" for="sf-attendance" style="margin:0">Nimmt an Trainings/Turnieren teil (Anwesenheit erfassen)</label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeStaffModal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="saveStaffMember()" style="margin-top:0">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- TRAINING PLAN MODAL -->
   <div class="modal-overlay" id="training-plan-modal" onclick="closeTrainingPlanModalOutside(event)">
-    <div class="modal-sheet" style="max-height:85vh;overflow-y:auto">
-      <div class="modal-handle"></div>
-      <div class="modal-title">Trainingsplan</div>
-      <div class="form-group">
-        <label class="form-label">Material</label>
-        <input class="form-input" type="text" id="tp-material" placeholder="z. B. Bälle, Leibchen, Minitore">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Trainingsplan</div>
       </div>
-      <div id="tp-blocks"></div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeTrainingPlanModal()">Abbrechen</button>
-        <button class="btn btn-primary" onclick="saveTrainingPlan()" style="margin-top:0">Speichern</button>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Material</label>
+          <input class="form-input" type="text" id="tp-material" placeholder="z. B. Bälle, Leibchen, Minitore">
+        </div>
+        <div id="tp-blocks"></div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeTrainingPlanModal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="saveTrainingPlan()" style="margin-top:0">Speichern</button>
+        </div>
       </div>
     </div>
   </div>
