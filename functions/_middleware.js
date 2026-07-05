@@ -36,7 +36,7 @@ function loginPage(showError) {
     <div class="card">
       <div class="card-header">
         <div class="card-header-icon">⚽</div>
-        <h1>SV Höngg Juniorinnen Ema</h1>
+        <h1>Juniorinnen Ema</h1>
       </div>
       <p>Bitte Team-Passwort eingeben</p>
       <form method="POST">
