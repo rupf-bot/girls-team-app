@@ -25,7 +25,7 @@ function loginPage(showError) {
   button { width:100%; height:48px; border:none; border-radius:12px; background:#3B82F6; color:white; font-size:16px; font-weight:700; cursor:pointer; transition:transform 0.1s; }
   button:active { transform:scale(0.97); }
   .err { color:#EF4444; font-size:13px; margin-bottom:12px; text-align:center; }
-  .logo { height:72px; width:auto; margin-top:24px; }
+  .logo { height:103px; width:auto; margin-top:24px; }
 </style></head>
 <body>
   <div class="wrap">
