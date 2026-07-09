@@ -863,16 +863,16 @@
   }
   .celebrate-particle {
     position: fixed;
-    font-size: 20px;
+    top: -30px;
     pointer-events: none;
     z-index: 9999;
-    transform: translate(-50%, -50%);
-    animation: celebrateFloat 0.9s ease-out forwards;
+    animation: celebrateFall cubic-bezier(0.45, 0, 0.55, 1) forwards;
   }
-  @keyframes celebrateFloat {
-    0%   { transform: translate(-50%, -50%) translate(0, 0) scale(0.5); opacity: 0; }
-    15%  { opacity: 1; transform: translate(-50%, -50%) translate(0, 0) scale(1.15); }
-    100% { transform: translate(-50%, -50%) translate(var(--dx), -95px) scale(0.9) rotate(20deg); opacity: 0; }
+  @keyframes celebrateFall {
+    0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+    12%  { opacity: 1; transform: translate(calc(var(--dx) * 0.15), calc(var(--fall) * 0.1)) rotate(calc(var(--rot) * 0.1)) scale(1); }
+    88%  { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--fall)) rotate(var(--rot)) scale(1); opacity: 0; }
   }
   .hero-empty-card {
     margin: 0 20px;
@@ -3447,7 +3447,7 @@ function renderParentHero(ev, playerId) {
   const actionArea = locked
     ? `<div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px;background:rgba(0,0,0,0.15);border-radius:8px;padding:8px 12px">${started ? 'Event hat begonnen — nur Trainer können noch ändern' : 'Anmeldeschluss erreicht — Änderungen waren bis 5 Std. vor Start möglich'}</div>`
     : `<div class="parent-status-btns">
-        <button class="parent-status-btn ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming', this)">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
+        <button class="parent-status-btn ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming')">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
         <button class="parent-status-btn ${status === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'absent')">✗ Absagen</button>
         <button class="parent-status-btn ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>`;
@@ -3539,7 +3539,7 @@ function renderParentTeam(filter = '') {
     </div>`).join('');
 }
 
-function parentSetStatus(eventId, playerId, newStatus, btnEl) {
+function parentSetStatus(eventId, playerId, newStatus) {
   const ev = state.events.find(e => e.id === eventId);
   if (ev && isLockedForParent(ev.date)) {
     showToast(isPast(ev.date) ? 'Event hat begonnen — nur Trainer können ändern' : 'Anmeldeschluss — Änderungen bis 5 Std. vor Start möglich');
@@ -3564,35 +3564,37 @@ function parentSetStatus(eventId, playerId, newStatus, btnEl) {
       rerenderCurrentPage();
     }
   };
-  if (newStatus === 'coming' && !wasComing && btnEl) {
+  if (newStatus === 'coming' && !wasComing) {
     // Let the ball/heart celebration play out first, then swap the card —
     // triggering both at once felt too hectic.
-    celebrateComingStatus(btnEl);
-    setTimeout(updateHero, 1000);
+    celebrateComingStatus();
+    setTimeout(updateHero, 1600);
   } else {
     updateHero();
   }
 }
 
-function celebrateComingStatus(btnEl) {
-  const rect = btnEl.getBoundingClientRect();
-  const originX = rect.left + rect.width / 2;
-  const originY = rect.top + rect.height / 2;
-  const icons = ['⚽', '♥', '⚽', '♥', '⚽', '♥'];
-  icons.forEach((icon, i) => {
+function celebrateComingStatus() {
+  // Full-page shower (à la Google-Feier), nicht nur am Button.
+  const count = 26;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  for (let i = 0; i < count; i++) {
+    const isHeart = Math.random() < 0.5;
     const el = document.createElement('span');
     el.className = 'celebrate-particle';
-    el.textContent = icon;
-    if (icon === '♥') el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
-    const dx = (Math.random() - 0.5) * 130;
-    el.style.left = originX + 'px';
-    el.style.top = originY + 'px';
-    el.style.setProperty('--dx', dx + 'px');
-    el.style.animationDuration = (0.7 + Math.random() * 0.4) + 's';
-    el.style.animationDelay = (i * 0.03) + 's';
+    el.textContent = isHeart ? '♥' : '⚽';
+    if (isHeart) el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
+    el.style.left = (Math.random() * vw) + 'px';
+    el.style.fontSize = (16 + Math.random() * 14) + 'px';
+    el.style.setProperty('--dx', ((Math.random() - 0.5) * 140) + 'px');
+    el.style.setProperty('--rot', ((Math.random() - 0.5) * 340) + 'deg');
+    el.style.setProperty('--fall', (vh + 60) + 'px');
+    el.style.animationDuration = (2.1 + Math.random() * 1.1) + 's';
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
-  });
+  }
 }
 
 function animateParentHeroUpdate() {
