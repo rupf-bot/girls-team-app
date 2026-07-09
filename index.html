@@ -849,14 +849,30 @@
     position: relative;
     overflow: hidden;
   }
-  #parent-home-hero > .hero-swipe-out { animation: heroSwipeOut 0.22s ease forwards; }
-  #parent-home-hero > .hero-swipe-in  { animation: heroSwipeIn 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+  #parent-home-hero > .hero-swipe-out { animation: heroSwipeOut 0.38s cubic-bezier(0.55, 0.06, 0.68, 0.19) forwards; transform-origin: bottom left; }
+  #parent-home-hero > .hero-swipe-in  { animation: heroSwipeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform-origin: bottom right; }
   @keyframes heroSwipeOut {
-    to { transform: translateX(-110%); opacity: 0; }
+    0%   { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+    25%  { transform: translate(-6%, -6px) rotate(-4deg) scale(0.98); opacity: 1; }
+    100% { transform: translate(-130%, 18px) rotate(-14deg) scale(0.82); opacity: 0; }
   }
   @keyframes heroSwipeIn {
-    from { transform: translateX(110%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    0%   { transform: translate(120%, 10px) rotate(10deg) scale(0.85); opacity: 0; }
+    65%  { transform: translate(-2%, -3px) rotate(-2deg) scale(1.03); opacity: 1; }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+  }
+  .celebrate-particle {
+    position: fixed;
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    animation: celebrateFloat 0.9s ease-out forwards;
+  }
+  @keyframes celebrateFloat {
+    0%   { transform: translate(-50%, -50%) translate(0, 0) scale(0.5); opacity: 0; }
+    15%  { opacity: 1; transform: translate(-50%, -50%) translate(0, 0) scale(1.15); }
+    100% { transform: translate(-50%, -50%) translate(var(--dx), -95px) scale(0.9) rotate(20deg); opacity: 0; }
   }
   .hero-empty-card {
     margin: 0 20px;
@@ -2119,6 +2135,14 @@ function getUpcomingEvents(limit = null) {
   return limit ? upcoming.slice(0, limit) : upcoming;
 }
 
+// Nearest upcoming event that still needs a status decision; falls back to the
+// nearest upcoming event overall once everything ahead has been answered.
+function getNextActionableEvent(playerId) {
+  const upcoming = getUpcomingEvents();
+  const open = upcoming.find(e => getStatus(e.id, playerId) === 'open');
+  return open || upcoming[0] || null;
+}
+
 function getPastEvents() {
   const now = new Date();
   return state.events.filter(e => new Date(e.date) < now).reverse();
@@ -3362,8 +3386,7 @@ function renderParentHome() {
   document.getElementById('parent-home-name').textContent = 'Hallo ' + player.name.split(' ')[0];
 
   // 1. Next event as hero with direct status actions
-  const upcoming = getUpcomingEvents();
-  const next = upcoming[0] || null;
+  const next = getNextActionableEvent(player.id);
   document.getElementById('parent-home-hero').innerHTML = next
     ? renderParentHero(next, player.id)
     : '<div class="hero-empty-card"><div class="empty-state-icon">🎉</div><div class="empty-state-text">Kein weiteres Event geplant</div><div class="hero-empty-sub">Geniess die Pause, wir melden uns sobald es weitergeht!</div></div>';
@@ -3424,7 +3447,7 @@ function renderParentHero(ev, playerId) {
   const actionArea = locked
     ? `<div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px;background:rgba(0,0,0,0.15);border-radius:8px;padding:8px 12px">${started ? 'Event hat begonnen — nur Trainer können noch ändern' : 'Anmeldeschluss erreicht — Änderungen waren bis 5 Std. vor Start möglich'}</div>`
     : `<div class="parent-status-btns">
-        <button class="parent-status-btn ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming')">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
+        <button class="parent-status-btn ${status === 'coming' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'coming', this)">✓ ${isTrn ? 'Dabei' : 'Verfügbar'}</button>
         <button class="parent-status-btn ${status === 'absent' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'absent')">✗ Absagen</button>
         <button class="parent-status-btn ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>`;
@@ -3516,7 +3539,7 @@ function renderParentTeam(filter = '') {
     </div>`).join('');
 }
 
-function parentSetStatus(eventId, playerId, newStatus) {
+function parentSetStatus(eventId, playerId, newStatus, btnEl) {
   const ev = state.events.find(e => e.id === eventId);
   if (ev && isLockedForParent(ev.date)) {
     showToast(isPast(ev.date) ? 'Event hat begonnen — nur Trainer können ändern' : 'Anmeldeschluss — Änderungen bis 5 Std. vor Start möglich');
@@ -3526,11 +3549,13 @@ function parentSetStatus(eventId, playerId, newStatus) {
     state.attendance[eventId] = {};
     // No default — players start as 'open'
   }
+  const wasComing = getStatus(eventId, playerId) === 'coming';
   state.attendance[eventId][playerId] = newStatus;
   saveState();
   apiPatch({ action: 'setAttendance', eventId, playerId, status: newStatus });
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
+  if (newStatus === 'coming' && !wasComing && btnEl) celebrateComingStatus(btnEl);
   expandedParentEventId = null;
   const page = document.querySelector('.page.active');
   if (page && page.id === 'page-parent-home') {
@@ -3538,6 +3563,26 @@ function parentSetStatus(eventId, playerId, newStatus) {
   } else {
     rerenderCurrentPage();
   }
+}
+
+function celebrateComingStatus(btnEl) {
+  const rect = btnEl.getBoundingClientRect();
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + rect.height / 2;
+  const icons = ['⚽', '❤️', '⚽', '❤️', '⚽', '❤️'];
+  icons.forEach((icon, i) => {
+    const el = document.createElement('span');
+    el.className = 'celebrate-particle';
+    el.textContent = icon;
+    const dx = (Math.random() - 0.5) * 130;
+    el.style.left = originX + 'px';
+    el.style.top = originY + 'px';
+    el.style.setProperty('--dx', dx + 'px');
+    el.style.animationDuration = (0.7 + Math.random() * 0.4) + 's';
+    el.style.animationDelay = (i * 0.03) + 's';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  });
 }
 
 function animateParentHeroUpdate() {
