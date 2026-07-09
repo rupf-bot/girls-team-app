@@ -870,6 +870,7 @@
   .celebrate-heart { animation-name: celebrateRise; animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); animation-fill-mode: forwards; }
   .celebrate-ball  { animation-name: celebrateBallPass; animation-timing-function: linear; animation-fill-mode: forwards; }
   .celebrate-care  { animation-name: celebrateRise; animation-timing-function: ease-out; animation-fill-mode: forwards; opacity: 0.9; }
+  .celebrate-ack   { animation-name: celebrateRise; animation-timing-function: ease-out; animation-fill-mode: forwards; opacity: 0.75; color: #64748B; }
   @keyframes celebrateRise {
     0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
     12%  { opacity: 1; transform: translate(calc(var(--dx) * 0.15), calc(var(--rise) * -0.1)) rotate(calc(var(--rot) * 0.1)) scale(1); }
@@ -3566,6 +3567,7 @@ function parentSetStatus(eventId, playerId, newStatus) {
   }
   const wasComing = getStatus(eventId, playerId) === 'coming';
   const wasInjured = getStatus(eventId, playerId) === 'injured';
+  const wasAbsent = getStatus(eventId, playerId) === 'absent';
   state.attendance[eventId][playerId] = newStatus;
   saveState();
   apiPatch({ action: 'setAttendance', eventId, playerId, status: newStatus });
@@ -3589,6 +3591,10 @@ function parentSetStatus(eventId, playerId, newStatus) {
     // Kein Feiern bei einer Verletzung — stattdessen eine ruhige, mitfühlende Geste.
     careForInjuredStatus();
     setTimeout(updateHero, 1200);
+  } else if (newStatus === 'absent' && !wasAbsent) {
+    // Absage ist neutral, keine Feier und kein Trost — nur ein kurzes, freundliches "verstanden".
+    acknowledgeAbsentStatus();
+    setTimeout(updateHero, 900);
   } else {
     updateHero();
   }
@@ -3635,7 +3641,7 @@ function celebrateComingStatus() {
     el.style.fontSize = (15 + Math.random() * 10) + 'px';
     el.style.setProperty('--dx', passDx + 'px');
     el.style.setProperty('--rise', (vh + 60) + 'px');
-    el.style.animationDuration = (2.5 + Math.random() * 0.7) + 's';
+    el.style.animationDuration = (2.3 + Math.random() * 1.1) + 's';
     el.style.animationDelay = (Math.random() * 0.5) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
@@ -3658,6 +3664,26 @@ function careForInjuredStatus() {
     el.style.setProperty('--rise', (vh * 0.55) + 'px');
     el.style.animationDuration = (1.6 + Math.random() * 0.6) + 's';
     el.style.animationDelay = (Math.random() * 0.4) + 's';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+}
+
+function acknowledgeAbsentStatus() {
+  // Neutral & kurz — keine Feier, kein Trost, nur ein freundliches "verstanden, bis bald".
+  const count = 5;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'celebrate-particle celebrate-ack';
+    el.textContent = '👋';
+    el.style.left = (Math.random() * vw) + 'px';
+    el.style.fontSize = (14 + Math.random() * 6) + 'px';
+    el.style.setProperty('--dx', ((Math.random() - 0.5) * 24) + 'px');
+    el.style.setProperty('--rise', (vh * 0.3) + 'px');
+    el.style.animationDuration = (0.9 + Math.random() * 0.4) + 's';
+    el.style.animationDelay = (Math.random() * 0.25) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
   }
