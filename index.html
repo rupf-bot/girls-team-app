@@ -3618,7 +3618,8 @@ function celebrateComingStatus() {
     const el = document.createElement('span');
     el.className = 'celebrate-particle celebrate-heart';
     el.textContent = '♥';
-    el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
+    const heartColors = ['#6B1A2A', '#2563EB', '#FF2D55']; // Bordeaux, Blau, Logo-Pink
+    el.style.color = heartColors[Math.floor(Math.random() * heartColors.length)];
     el.style.left = x + 'px';
     el.style.fontSize = (16 + Math.random() * 14) + 'px';
     el.style.setProperty('--dx', ((Math.random() - 0.5) * 40) + 'px');
