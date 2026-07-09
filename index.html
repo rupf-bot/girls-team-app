@@ -3575,27 +3575,29 @@ function parentSetStatus(eventId, playerId, newStatus) {
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
   expandedParentEventId = null;
+  const activePage = document.querySelector('.page.active');
+  const onHome = !!(activePage && activePage.id === 'page-parent-home');
   const updateHero = () => {
-    const activePage = document.querySelector('.page.active');
-    if (activePage && activePage.id === 'page-parent-home') {
+    if (onHome) {
       animateParentHeroUpdate();
     } else {
       rerenderCurrentPage();
     }
   };
+  // Die Verzögerung ist nur auf der Home-Hero-Karte nötig, damit Feier-Animation und
+  // Karten-Swap nicht gleichzeitig laufen. Auf allen anderen Seiten (z.B. Event-Unterseite)
+  // sofort aktualisieren, sonst wirkt der Button-Klick wie nicht registriert.
   if (newStatus === 'coming' && !wasComing) {
-    // Let the ball/heart celebration play out first, then swap the card —
-    // triggering both at once felt too hectic.
     celebrateComingStatus();
-    setTimeout(updateHero, 1600);
+    if (onHome) { setTimeout(updateHero, 1600); } else { updateHero(); }
   } else if (newStatus === 'injured' && !wasInjured) {
     // Kein Feiern bei einer Verletzung — stattdessen eine ruhige, mitfühlende Geste.
     careForInjuredStatus();
-    setTimeout(updateHero, 1200);
+    if (onHome) { setTimeout(updateHero, 1200); } else { updateHero(); }
   } else if (newStatus === 'absent' && !wasAbsent) {
     // Absage ist neutral, keine Feier und kein Trost — nur ein kurzes, freundliches "verstanden".
     acknowledgeAbsentStatus();
-    setTimeout(updateHero, 900);
+    if (onHome) { setTimeout(updateHero, 900); } else { updateHero(); }
   } else {
     updateHero();
   }
