@@ -868,7 +868,7 @@
     z-index: 9999;
   }
   .celebrate-heart { animation-name: celebrateRise; animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); animation-fill-mode: forwards; }
-  .celebrate-ball  { animation-name: celebrateBallPass; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); animation-fill-mode: forwards; }
+  .celebrate-ball  { animation-name: celebrateBallPass; animation-timing-function: linear; animation-fill-mode: forwards; }
   .celebrate-care  { animation-name: celebrateRise; animation-timing-function: ease-out; animation-fill-mode: forwards; opacity: 0.9; }
   @keyframes celebrateRise {
     0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
@@ -876,18 +876,18 @@
     88%  { opacity: 1; }
     100% { transform: translate(var(--dx), calc(var(--rise) * -1)) rotate(var(--rot)) scale(1); opacity: 0; }
   }
-  /* Bälle werden im Zickzack zwischen zwei Herzen "hin- und hergespielt", während sie aufsteigen. */
+  /* Bälle schweben in einer sanften, runden S-Kurve zwischen zwei Herzen auf, mit konstantem Tempo. */
   @keyframes celebrateBallPass {
-    0%    { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
-    8%    { opacity: 1; }
-    12.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.09 - 16px)) rotate(160deg) scale(1.15); }
-    25%   { transform: translate(var(--dx), calc(var(--rise) * -0.22)) rotate(320deg) scale(0.9); }
-    37.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.34 - 16px)) rotate(480deg) scale(1.15); }
-    50%   { transform: translate(0, calc(var(--rise) * -0.48)) rotate(640deg) scale(0.9); }
-    62.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.6 - 16px)) rotate(800deg) scale(1.15); }
-    75%   { transform: translate(var(--dx), calc(var(--rise) * -0.74)) rotate(960deg) scale(0.9); }
-    87.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.88 - 16px)) rotate(1120deg) scale(1.15); opacity: 1; }
-    100%  { transform: translate(0, calc(var(--rise) * -1)) rotate(1280deg) scale(0.75); opacity: 0; }
+    0%    { transform: translate(0, 0) rotate(0deg) scale(0.85); opacity: 0; }
+    6%    { opacity: 1; }
+    12.5% { transform: translate(calc(var(--dx) * 0.38), calc(var(--rise) * -0.125)) rotate(90deg) scale(0.95); }
+    25%   { transform: translate(calc(var(--dx) * 0.71), calc(var(--rise) * -0.25)) rotate(180deg) scale(1); }
+    37.5% { transform: translate(calc(var(--dx) * 0.92), calc(var(--rise) * -0.375)) rotate(270deg) scale(0.95); }
+    50%   { transform: translate(var(--dx), calc(var(--rise) * -0.5)) rotate(360deg) scale(0.9); }
+    62.5% { transform: translate(calc(var(--dx) * 0.71), calc(var(--rise) * -0.625)) rotate(450deg) scale(0.95); }
+    75%   { transform: translate(calc(var(--dx) * 0.29), calc(var(--rise) * -0.75)) rotate(540deg) scale(1); }
+    87.5% { transform: translate(calc(var(--dx) * 0.08), calc(var(--rise) * -0.875)) rotate(630deg) scale(0.95); opacity: 1; }
+    100%  { transform: translate(0, calc(var(--rise) * -1)) rotate(720deg) scale(0.8); opacity: 0; }
   }
   .hero-empty-card {
     margin: 0 20px;
@@ -3651,7 +3651,7 @@ function careForInjuredStatus() {
   for (let i = 0; i < count; i++) {
     const el = document.createElement('span');
     el.className = 'celebrate-particle celebrate-care';
-    el.textContent = Math.random() < 0.5 ? '🩹' : '💛';
+    el.textContent = Math.random() < 0.5 ? '🤕' : '💙';
     el.style.left = (Math.random() * vw) + 'px';
     el.style.fontSize = (14 + Math.random() * 8) + 'px';
     el.style.setProperty('--dx', ((Math.random() - 0.5) * 30) + 'px');
