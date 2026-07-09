@@ -841,6 +841,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  #parent-home-hero { overflow: hidden; }
   .parent-hero-card {
     margin: 0 20px;
     border-radius: 20px;
@@ -848,6 +849,24 @@
     position: relative;
     overflow: hidden;
   }
+  #parent-home-hero > .hero-swipe-out { animation: heroSwipeOut 0.22s ease forwards; }
+  #parent-home-hero > .hero-swipe-in  { animation: heroSwipeIn 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
+  @keyframes heroSwipeOut {
+    to { transform: translateX(-110%); opacity: 0; }
+  }
+  @keyframes heroSwipeIn {
+    from { transform: translateX(110%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .hero-empty-card {
+    margin: 0 20px;
+    border-radius: 20px;
+    padding: 32px 22px;
+    text-align: center;
+    background: var(--gray-150);
+    color: var(--gray-500);
+  }
+  .hero-empty-sub { font-size: 13px; margin-top: 6px; color: var(--gray-500); }
   .parent-hero-card.open-hero      { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-mid) 100%); }
   .parent-hero-card.coming-hero    { background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%); }
   .parent-hero-card.absent-hero    { background: linear-gradient(135deg, #DC2626 0%, var(--red) 100%); }
@@ -3347,7 +3366,7 @@ function renderParentHome() {
   const next = upcoming[0] || null;
   document.getElementById('parent-home-hero').innerHTML = next
     ? renderParentHero(next, player.id)
-    : '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine kommenden Events</div></div>';
+    : '<div class="hero-empty-card"><div class="empty-state-icon">🎉</div><div class="empty-state-text">Kein weiteres Event geplant</div><div class="hero-empty-sub">Geniess die Pause, wir melden uns sobald es weitergeht!</div></div>';
   if (next) scheduleParentHomeRefresh(next);
 
   // 2. Season stats
@@ -3513,7 +3532,24 @@ function parentSetStatus(eventId, playerId, newStatus) {
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
   expandedParentEventId = null;
-  rerenderCurrentPage();
+  const page = document.querySelector('.page.active');
+  if (page && page.id === 'page-parent-home') {
+    animateParentHeroUpdate();
+  } else {
+    rerenderCurrentPage();
+  }
+}
+
+function animateParentHeroUpdate() {
+  const heroWrap = document.getElementById('parent-home-hero');
+  const oldCard = heroWrap && heroWrap.firstElementChild;
+  if (!oldCard) { renderParentHome(); return; }
+  oldCard.classList.add('hero-swipe-out');
+  oldCard.addEventListener('animationend', () => {
+    renderParentHome();
+    const newCard = heroWrap.firstElementChild;
+    if (newCard) newCard.classList.add('hero-swipe-in');
+  }, { once: true });
 }
 
 // ============================================================
