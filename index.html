@@ -857,22 +857,37 @@
     100% { transform: translate(-130%, 18px) rotate(-14deg) scale(0.82); opacity: 0; }
   }
   @keyframes heroSwipeIn {
-    0%   { transform: translate(120%, 10px) rotate(10deg) scale(0.85); opacity: 0; }
-    65%  { transform: translate(-2%, -3px) rotate(-2deg) scale(1.03); opacity: 1; }
-    100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+    0%   { transform: translate(120%, 10px) rotate(10deg) scale(0.85); opacity: 0; filter: brightness(1.5) saturate(0.35); }
+    65%  { transform: translate(-2%, -3px) rotate(-2deg) scale(1.03); opacity: 1; filter: brightness(1.15) saturate(0.75); }
+    100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; filter: brightness(1) saturate(1); }
   }
   .celebrate-particle {
     position: fixed;
-    top: -30px;
+    bottom: -30px;
     pointer-events: none;
     z-index: 9999;
-    animation: celebrateFall cubic-bezier(0.45, 0, 0.55, 1) forwards;
   }
-  @keyframes celebrateFall {
+  .celebrate-heart { animation-name: celebrateRise; animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); animation-fill-mode: forwards; }
+  .celebrate-ball  { animation-name: celebrateBallPass; animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1); animation-fill-mode: forwards; }
+  .celebrate-care  { animation-name: celebrateRise; animation-timing-function: ease-out; animation-fill-mode: forwards; opacity: 0.9; }
+  @keyframes celebrateRise {
     0%   { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
-    12%  { opacity: 1; transform: translate(calc(var(--dx) * 0.15), calc(var(--fall) * 0.1)) rotate(calc(var(--rot) * 0.1)) scale(1); }
+    12%  { opacity: 1; transform: translate(calc(var(--dx) * 0.15), calc(var(--rise) * -0.1)) rotate(calc(var(--rot) * 0.1)) scale(1); }
     88%  { opacity: 1; }
-    100% { transform: translate(var(--dx), var(--fall)) rotate(var(--rot)) scale(1); opacity: 0; }
+    100% { transform: translate(var(--dx), calc(var(--rise) * -1)) rotate(var(--rot)) scale(1); opacity: 0; }
+  }
+  /* Bälle werden im Zickzack zwischen zwei Herzen "hin- und hergespielt", während sie aufsteigen. */
+  @keyframes celebrateBallPass {
+    0%    { transform: translate(0, 0) rotate(0deg) scale(0.6); opacity: 0; }
+    8%    { opacity: 1; }
+    12.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.09 - 16px)) rotate(160deg) scale(1.15); }
+    25%   { transform: translate(var(--dx), calc(var(--rise) * -0.22)) rotate(320deg) scale(0.9); }
+    37.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.34 - 16px)) rotate(480deg) scale(1.15); }
+    50%   { transform: translate(0, calc(var(--rise) * -0.48)) rotate(640deg) scale(0.9); }
+    62.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.6 - 16px)) rotate(800deg) scale(1.15); }
+    75%   { transform: translate(var(--dx), calc(var(--rise) * -0.74)) rotate(960deg) scale(0.9); }
+    87.5% { transform: translate(calc(var(--dx) * 0.5), calc(var(--rise) * -0.88 - 16px)) rotate(1120deg) scale(1.15); opacity: 1; }
+    100%  { transform: translate(0, calc(var(--rise) * -1)) rotate(1280deg) scale(0.75); opacity: 0; }
   }
   .hero-empty-card {
     margin: 0 20px;
@@ -1077,7 +1092,7 @@
     bottom: calc(var(--nav-height) + 16px);
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--navy);
+    background: #FF2D55;
     color: white;
     font-size: 14px;
     font-weight: 600;
@@ -3550,6 +3565,7 @@ function parentSetStatus(eventId, playerId, newStatus) {
     // No default — players start as 'open'
   }
   const wasComing = getStatus(eventId, playerId) === 'coming';
+  const wasInjured = getStatus(eventId, playerId) === 'injured';
   state.attendance[eventId][playerId] = newStatus;
   saveState();
   apiPatch({ action: 'setAttendance', eventId, playerId, status: newStatus });
@@ -3569,29 +3585,79 @@ function parentSetStatus(eventId, playerId, newStatus) {
     // triggering both at once felt too hectic.
     celebrateComingStatus();
     setTimeout(updateHero, 1600);
+  } else if (newStatus === 'injured' && !wasInjured) {
+    // Kein Feiern bei einer Verletzung — stattdessen eine ruhige, mitfühlende Geste.
+    careForInjuredStatus();
+    setTimeout(updateHero, 1200);
   } else {
     updateHero();
   }
 }
 
 function celebrateComingStatus() {
-  // Full-page shower (à la Google-Feier), nicht nur am Button.
-  const count = 26;
+  // Full-page shower (à la Google-Feier), steigt von unten nach oben auf.
+  // Herzen = ruhige Ankerpunkte, Bälle werden im Zickzack zwischen ihnen "hin- und hergespielt".
+  const heartCount = 13;
+  const ballCount = 12;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const heartXs = [];
+
+  for (let i = 0; i < heartCount; i++) {
+    const x = Math.random() * vw;
+    heartXs.push(x);
+    const el = document.createElement('span');
+    el.className = 'celebrate-particle celebrate-heart';
+    el.textContent = '♥';
+    el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
+    el.style.left = x + 'px';
+    el.style.fontSize = (16 + Math.random() * 14) + 'px';
+    el.style.setProperty('--dx', ((Math.random() - 0.5) * 40) + 'px');
+    el.style.setProperty('--rot', ((Math.random() - 0.5) * 120) + 'deg');
+    el.style.setProperty('--rise', (vh + 60) + 'px');
+    el.style.animationDuration = (2.3 + Math.random() * 1.1) + 's';
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+
+  for (let i = 0; i < ballCount; i++) {
+    const startX = heartXs.length ? heartXs[Math.floor(Math.random() * heartXs.length)] : Math.random() * vw;
+    const otherX = heartXs.length ? heartXs[Math.floor(Math.random() * heartXs.length)] : Math.random() * vw;
+    let passDx = otherX - startX;
+    const sign = passDx < 0 ? -1 : 1;
+    const mag = Math.min(Math.max(Math.abs(passDx), 50), 150);
+    passDx = sign * mag;
+    const el = document.createElement('span');
+    el.className = 'celebrate-particle celebrate-ball';
+    el.textContent = '⚽';
+    el.style.left = startX + 'px';
+    el.style.fontSize = (15 + Math.random() * 10) + 'px';
+    el.style.setProperty('--dx', passDx + 'px');
+    el.style.setProperty('--rise', (vh + 60) + 'px');
+    el.style.animationDuration = (2.5 + Math.random() * 0.7) + 's';
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+}
+
+function careForInjuredStatus() {
+  // Bewusst kein Konfetti bei "Verletzt" — nur ein paar ruhige, warme Pflaster-Herzen,
+  // die sanft hochschweben. Fühlt sich nach Anteilnahme statt Party an.
+  const count = 7;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   for (let i = 0; i < count; i++) {
-    const isHeart = Math.random() < 0.5;
     const el = document.createElement('span');
-    el.className = 'celebrate-particle';
-    el.textContent = isHeart ? '♥' : '⚽';
-    if (isHeart) el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
+    el.className = 'celebrate-particle celebrate-care';
+    el.textContent = Math.random() < 0.5 ? '🩹' : '💛';
     el.style.left = (Math.random() * vw) + 'px';
-    el.style.fontSize = (16 + Math.random() * 14) + 'px';
-    el.style.setProperty('--dx', ((Math.random() - 0.5) * 140) + 'px');
-    el.style.setProperty('--rot', ((Math.random() - 0.5) * 340) + 'deg');
-    el.style.setProperty('--fall', (vh + 60) + 'px');
-    el.style.animationDuration = (2.1 + Math.random() * 1.1) + 's';
-    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    el.style.fontSize = (14 + Math.random() * 8) + 'px';
+    el.style.setProperty('--dx', ((Math.random() - 0.5) * 30) + 'px');
+    el.style.setProperty('--rise', (vh * 0.55) + 'px');
+    el.style.animationDuration = (1.6 + Math.random() * 0.6) + 's';
+    el.style.animationDelay = (Math.random() * 0.4) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
   }
