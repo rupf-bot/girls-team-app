@@ -3578,11 +3578,12 @@ function celebrateComingStatus(btnEl) {
   const rect = btnEl.getBoundingClientRect();
   const originX = rect.left + rect.width / 2;
   const originY = rect.top + rect.height / 2;
-  const icons = ['⚽', '💗', '⚽', '💗', '⚽', '💗'];
+  const icons = ['⚽', '♥', '⚽', '♥', '⚽', '♥'];
   icons.forEach((icon, i) => {
     const el = document.createElement('span');
     el.className = 'celebrate-particle';
     el.textContent = icon;
+    if (icon === '♥') el.style.color = '#FF2D55'; // Logo-Pink aus dem "Ema"-Schriftzug
     const dx = (Math.random() - 0.5) * 130;
     el.style.left = originX + 'px';
     el.style.top = originY + 'px';
