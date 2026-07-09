@@ -3555,13 +3555,22 @@ function parentSetStatus(eventId, playerId, newStatus, btnEl) {
   apiPatch({ action: 'setAttendance', eventId, playerId, status: newStatus });
   const msg = newStatus === 'coming' ? (ev && ev.type === 'tournament' ? '✓ Als verfügbar gemeldet' : '✓ Ich bin dabei!') : newStatus === 'absent' ? '✗ Abgesagt' : '🩹 Als verletzt gemeldet';
   showToast(msg);
-  if (newStatus === 'coming' && !wasComing && btnEl) celebrateComingStatus(btnEl);
   expandedParentEventId = null;
-  const page = document.querySelector('.page.active');
-  if (page && page.id === 'page-parent-home') {
-    animateParentHeroUpdate();
+  const updateHero = () => {
+    const activePage = document.querySelector('.page.active');
+    if (activePage && activePage.id === 'page-parent-home') {
+      animateParentHeroUpdate();
+    } else {
+      rerenderCurrentPage();
+    }
+  };
+  if (newStatus === 'coming' && !wasComing && btnEl) {
+    // Let the ball/heart celebration play out first, then swap the card —
+    // triggering both at once felt too hectic.
+    celebrateComingStatus(btnEl);
+    setTimeout(updateHero, 1000);
   } else {
-    rerenderCurrentPage();
+    updateHero();
   }
 }
 
