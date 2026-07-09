@@ -2151,12 +2151,13 @@ function getUpcomingEvents(limit = null) {
   return limit ? upcoming.slice(0, limit) : upcoming;
 }
 
-// Nearest upcoming event that still needs a status decision; falls back to the
-// nearest upcoming event overall once everything ahead has been answered.
+// Nearest upcoming event that still needs a status decision. Once every
+// upcoming event has been answered, returns null so the home screen shows
+// the "kein weiteres Event geplant" empty state instead of repeating an
+// already-answered event.
 function getNextActionableEvent(playerId) {
   const upcoming = getUpcomingEvents();
-  const open = upcoming.find(e => getStatus(e.id, playerId) === 'open');
-  return open || upcoming[0] || null;
+  return upcoming.find(e => getStatus(e.id, playerId) === 'open') || null;
 }
 
 function getPastEvents() {
