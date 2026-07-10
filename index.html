@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SV Höngg · Juniorinnen Ema</title>
+<title>SV Höngg · Juniorinnen EMa</title>
 <link rel="preload" as="image" href="SVH-Logo-transparent.png">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,7 +44,7 @@
   html, body {
     height: 100%;
     width: 100%;
-    overflow-x: hidden;
+    overflow: hidden;
     background: #fff;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
     color: var(--navy);
@@ -1273,13 +1273,13 @@
   <!-- LOGIN -->
   <div id="page-login" class="page active">
     <div class="login-content" style="position:relative;z-index:1">
-      <div class="login-logo"><img src="Group 61 (1).svg" alt="Ema"></div>
+      <div class="login-logo"><img src="Group 61 (1).svg" alt="EMa"></div>
       <div class="login-cards">
         <div class="login-card selected" id="parent-card">
           <div class="login-card-header">
             <div class="login-card-icon">⚽</div>
             <div>
-              <div class="login-card-title">Juniorinnen Ema</div>
+              <div class="login-card-title">Juniorinnen EMa</div>
             </div>
           </div>
           <div class="login-card-body">
@@ -1309,7 +1309,7 @@
       <div class="header-child-badge"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="scroll-content">
@@ -1345,7 +1345,7 @@
       <div class="header-child-badge"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="tabs" style="align-items:center">
@@ -1385,7 +1385,7 @@
       <div class="header-child-badge"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="search-input-wrap">
@@ -1406,7 +1406,7 @@
       <div id="parent-home-name" style="font-size:17px;font-weight:800;color:var(--brand-blue)"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="scroll-content-parent">
@@ -1426,7 +1426,7 @@
       <div class="header-child-badge"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="tabs">
@@ -1443,7 +1443,7 @@
       <div class="header-child-badge"></div>
       <div class="header-title" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-left:auto;margin-right:8px" onclick="doLogout()">
         <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:32px;width:auto">
-        <div style="font-size:17px;font-weight:800;color:var(--navy)">Ema</div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy)">EMa</div>
       </div>
     </div>
     <div class="search-input-wrap">
@@ -2126,8 +2126,8 @@ function googleCalendarLink(ev) {
   const durationMs = isTrn ? 90 * 60 * 1000 : 3 * 60 * 60 * 1000; // Training 1.5h, Turnier 3h angenommen
   const end = new Date(start.getTime() + durationMs);
   const fmt = d => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-  const title = encodeURIComponent(isTrn ? 'Training – SVH Juniorinnen Ema' : 'Turnier – SVH Juniorinnen Ema');
-  const details = encodeURIComponent('SV Höngg Juniorinnen Ema');
+  const title = encodeURIComponent(isTrn ? 'Training – SVH Juniorinnen EMa' : 'Turnier – SVH Juniorinnen EMa');
+  const details = encodeURIComponent('SV Höngg Juniorinnen EMa');
   const location = encodeURIComponent(ev.location);
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}&location=${location}&details=${details}`;
 }

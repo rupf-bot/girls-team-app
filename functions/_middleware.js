@@ -13,7 +13,7 @@ function timingSafeEqual(a, b) {
 function loginPage(showError) {
   return `<!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SV Höngg Juniorinnen Ema</title>
+<title>SV Höngg Juniorinnen EMa</title>
 <style>
   html, body { height:100%; overscroll-behavior:none; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; min-height:100dvh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; overflow:hidden; }
@@ -43,7 +43,7 @@ function loginPage(showError) {
     <div class="card">
       <div class="card-header">
         <div class="card-header-icon">⚽</div>
-        <h1>Juniorinnen Ema</h1>
+        <h1>Juniorinnen EMa</h1>
       </div>
       <p>Bitte Team-Passwort eingeben</p>
       <form method="POST">
