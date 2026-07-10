@@ -3589,7 +3589,9 @@ function parentSetStatus(eventId, playerId, newStatus) {
   // sofort aktualisieren, sonst wirkt der Button-Klick wie nicht registriert.
   if (newStatus === 'coming' && !wasComing) {
     celebrateComingStatus();
-    if (onHome) { setTimeout(updateHero, 450); } else { updateHero(); }
+    // Karte erst wechseln, wenn die Herzen/Bälle-Feier komplett durchgelaufen ist
+    // (max. Delay 0.2s + max. Dauer 1.8s der Partikel).
+    if (onHome) { setTimeout(updateHero, 2000); } else { updateHero(); }
   } else if (newStatus === 'injured' && !wasInjured) {
     // Kein Feiern bei einer Verletzung — stattdessen eine ruhige, mitfühlende Geste.
     careForInjuredStatus();
@@ -3625,8 +3627,8 @@ function celebrateComingStatus() {
     el.style.setProperty('--dx', ((Math.random() - 0.5) * 40) + 'px');
     el.style.setProperty('--rot', ((Math.random() - 0.5) * 120) + 'deg');
     el.style.setProperty('--rise', (vh + 60) + 'px');
-    el.style.animationDuration = (2.3 + Math.random() * 1.1) + 's';
-    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    el.style.animationDuration = (1.3 + Math.random() * 0.5) + 's';
+    el.style.animationDelay = (Math.random() * 0.2) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
   }
@@ -3645,8 +3647,8 @@ function celebrateComingStatus() {
     el.style.fontSize = (15 + Math.random() * 10) + 'px';
     el.style.setProperty('--dx', passDx + 'px');
     el.style.setProperty('--rise', (vh + 60) + 'px');
-    el.style.animationDuration = (2.3 + Math.random() * 1.1) + 's';
-    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    el.style.animationDuration = (1.3 + Math.random() * 0.5) + 's';
+    el.style.animationDelay = (Math.random() * 0.2) + 's';
     document.body.appendChild(el);
     el.addEventListener('animationend', () => el.remove(), { once: true });
   }
