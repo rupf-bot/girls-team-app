@@ -1752,12 +1752,12 @@ function generateTournaments() {
   ];
   let id = 201;
   return matches.map(m => {
-    const d = new Date(`${m.date}T${m.time || '09:00'}:00`);
+    const d = new Date(`${m.date}T${m.time || '00:00'}:00`);
     return {
       id: id++,
       type: 'tournament',
       date: d.toISOString(),
-      location: m.location || 'Ort & Zeit folgen im August',
+      location: m.location || 'Ort und Zeit folgen während der Saison',
       title: 'Turnier',
     };
   });
