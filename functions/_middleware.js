@@ -73,7 +73,10 @@ export async function onRequest(context) {
   const cookieHeader = request.headers.get('Cookie') || '';
   const hasValidCookie = cookieHeader.split(';').some(c => c.trim() === `${COOKIE_NAME}=ok`);
 
-  if (request.method === 'POST') {
+  // Nur POSTs auf die Root-Seite sind der Login-Formular-Submit. API-POSTs (z.B.
+  // /api/state) müssen stattdessen normal die Cookie-Prüfung durchlaufen, sonst
+  // wird ihr JSON-Body fälschlich als Login-Formular geparst und crasht.
+  if (request.method === 'POST' && url.pathname === '/') {
     const form = await request.formData();
     const submitted = String(form.get('password') || '');
     const correct = env.TEAM_PASSWORD && timingSafeEqual(submitted, env.TEAM_PASSWORD);
