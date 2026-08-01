@@ -1741,7 +1741,6 @@ function generateTrainings() {
 // Nur Herbstrunde 2026 erfasst — Rückrunde 2027 folgt separat, sobald bestätigt.
 function generateTournaments() {
   const matches = [
-    { date: '2026-08-23' },
     { date: '2026-08-30', time: '11:30', location: 'Hönggerberg · Zürich' },
     { date: '2026-09-06', time: '11:00', location: 'Hönggerberg · Zürich' },
     { date: '2026-09-13', time: '09:30', location: 'Gheid · Buchs ZH' },
@@ -1751,7 +1750,7 @@ function generateTournaments() {
     { date: '2026-11-01' },
     { date: '2026-11-08' },
   ];
-  let id = 200;
+  let id = 201;
   return matches.map(m => {
     const d = new Date(`${m.date}T${m.time || '09:00'}:00`);
     return {
