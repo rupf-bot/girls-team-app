@@ -1736,22 +1736,29 @@ function generateTrainings() {
   }));
 }
 
-// Turniere: Meisterschaftsspiele JF-D, jeweils Sonntag (Samstag im Rundenkalender + 1 Tag).
-// Ort/genaue Zeit werden erst im August pro Spiel bekanntgegeben (Gegner noch offen).
+// Turniere: Meisterschaftsspiele JF-D (BRACK.CH pmf, FVRZ), meist Sonntag, teils Samstag.
+// Ort/Zeit gemäss Spielbetrieb-App (Stand 01.08.26); noch offene Termine folgen später.
 // Nur Herbstrunde 2026 erfasst — Rückrunde 2027 folgt separat, sobald bestätigt.
 function generateTournaments() {
-  const dates = [
-    '2026-08-23', '2026-08-30', '2026-09-06', '2026-09-13', '2026-09-20', '2026-09-27',
-    '2026-10-25', '2026-11-01', '2026-11-08',
+  const matches = [
+    { date: '2026-08-23' },
+    { date: '2026-08-30', time: '11:30', location: 'Hönggerberg · Zürich' },
+    { date: '2026-09-06', time: '11:00', location: 'Hönggerberg · Zürich' },
+    { date: '2026-09-13', time: '09:30', location: 'Gheid · Buchs ZH' },
+    { date: '2026-09-19', time: '10:00', location: 'Heerenschürli · Zürich' },
+    { date: '2026-09-27' },
+    { date: '2026-10-25' },
+    { date: '2026-11-01' },
+    { date: '2026-11-08' },
   ];
   let id = 200;
-  return dates.map(dateStr => {
-    const d = new Date(`${dateStr}T09:00:00`);
+  return matches.map(m => {
+    const d = new Date(`${m.date}T${m.time || '09:00'}:00`);
     return {
       id: id++,
       type: 'tournament',
       date: d.toISOString(),
-      location: 'Ort & Zeit folgen im August',
+      location: m.location || 'Ort & Zeit folgen im August',
       title: 'Turnier',
     };
   });
