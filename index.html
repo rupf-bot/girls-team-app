@@ -1672,7 +1672,6 @@ let PLAYERS = [
   { id: 12, name: 'Quinn Kull',             parent: 'Familie Kull',          phone: '079 579 13 32', nameMother: 'Denise', number: 3 },
   { id: 13, name: 'Freya Nuri Küpfer',      parent: 'Familie Küpfer',        phone: '078 916 88 90', nameMother: 'Simone',    phone2: '079 377 48 26', nameFather: 'Adrian Oertli' },
   { id: 14, name: 'Arina Locherer',         parent: 'Familie Locherer',      phone: '079 511 51 88', phone2: '076 583 32 84', number: 28 },
-  { id: 15, name: 'Giorgia Marini',         parent: 'Familie Marini',        phone: '079 415 82 54', nameMother: 'Guya',      phone2: '079 765 76 35', nameFather: 'Alex' },
   { id: 16, name: 'Elyne Meyer',            parent: 'Familie Meyer',         phone: '079 459 12 49', nameMother: 'Pat',       phone2: '076 420 21 85', number: 7 },
   { id: 17, name: 'Lea Lina Rupf',          parent: 'Familie Rupf',          phone: '079 420 99 65', nameMother: 'Simone Eder', phone2: '079 245 78 71', nameFather: 'Marcel', number: 26 },
   { id: 18, name: 'Rea Salzmann',           parent: 'Familie Salzmann',      phone: '078 699 64 55', nameMother: 'Tina',      phone2: '079 416 98 52', number: 8 },
@@ -1737,18 +1736,15 @@ function generateTrainings() {
 }
 
 // Turniere: Meisterschaftsspiele JF-D (BRACK.CH pmf, FVRZ), meist Sonntag, teils Samstag.
-// Ort/Zeit gemäss Spielbetrieb-App (Stand 01.08.26); noch offene Termine folgen später.
-// Nur Herbstrunde 2026 erfasst — Rückrunde 2027 folgt separat, sobald bestätigt.
+// Ort/Zeit gemäss Spielbetrieb-App (Stand 11.08.26), 5 bestätigte Termine Herbstrunde.
+// Weitere Termine (inkl. Rückrunde 2027) folgen separat, sobald bestätigt.
 function generateTournaments() {
   const matches = [
     { date: '2026-08-30', time: '11:30', location: 'Hönggerberg · Zürich' },
     { date: '2026-09-06', time: '11:00', location: 'Hönggerberg · Zürich' },
     { date: '2026-09-13', time: '09:30', location: 'Gheid · Buchs ZH' },
     { date: '2026-09-19', time: '10:00', location: 'Heerenschürli · Zürich' },
-    { date: '2026-09-27' },
-    { date: '2026-10-25' },
-    { date: '2026-11-01' },
-    { date: '2026-11-08' },
+    { date: '2026-09-26', time: '10:00', location: 'Witikon · Zürich' },
   ];
   let id = 201;
   return matches.map(m => {
@@ -2011,13 +2007,12 @@ function isAttending(eventId, playerId) {
 function cycleStatus(eventId, playerId) {
   if (!state.attendance[eventId]) state.attendance[eventId] = {};
   const current = getStatus(eventId, playerId);
-  // open → coming → absent → injured → open
-  const next = current === 'open' ? 'coming' : current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'open';
-  // store 'open' as undefined (clean state)
-  if (next === 'open') delete state.attendance[eventId][playerId];
-  else state.attendance[eventId][playerId] = next;
+  // open → coming → absent → injured → coming (kein automatischer Reset auf offen mehr,
+  // damit ein einmal gesetzter Status nie unabsichtlich durch Weiterklicken gelöscht wird)
+  const next = current === 'open' ? 'coming' : current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'coming';
+  state.attendance[eventId][playerId] = next;
   saveState();
-  apiPatch({ action: 'setAttendance', eventId, playerId, status: next === 'open' ? null : next });
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: next });
   return next;
 }
 
