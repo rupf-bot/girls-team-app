@@ -1759,50 +1759,6 @@ function generateTournaments() {
   });
 }
 
-// Anwesenheitsquote pro Spielerin (Index = playerId - 1), bewusst unterschiedlich
-const SIM_RATES = [0.95, 0.9, 0.55, 0.85, 0.75, 0.9, 0.5, 0.8, 0.95, 0.65, 0.45, 0.7, 0.85, 0.6, 0.9, 0.75, 0.55, 0.8, 0.7, 0.4];
-
-// Deterministischer Pseudozufall, damit die Simulation über Reloads stabil bleibt
-function seededRand(a, b) {
-  const x = Math.sin(a * 374761 + b * 668265) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-function seedPastAttendance() {
-  state.events.filter(e => isPast(e.date)).forEach(ev => {
-    if (!state.attendance[ev.id]) state.attendance[ev.id] = {};
-    PLAYERS.forEach(p => {
-      if (state.attendance[ev.id][p.id] !== undefined) return;
-      const r = seededRand(ev.id, p.id);
-      const rate = SIM_RATES[p.id - 1];
-      state.attendance[ev.id][p.id] = r < rate ? 'coming' : (r < rate + 0.08 ? 'injured' : 'absent');
-    });
-  });
-}
-
-// Aufgebote für vergangene Turniere: von den Angemeldeten spielen max. 10,
-// der Rest wird trotz Anmeldung nicht aufgeboten ('out')
-function seedPastSquad() {
-  state.events.filter(e => e.type === 'tournament' && isPast(e.date)).forEach(ev => {
-    if (!state.squad[ev.id]) state.squad[ev.id] = {};
-    const registered = PLAYERS.filter(p => getStatus(ev.id, p.id) === 'coming');
-    const ranked = [...registered].sort((a, b) => seededRand(ev.id * 7, a.id) - seededRand(ev.id * 7, b.id));
-    ranked.forEach((p, i) => {
-      if (state.squad[ev.id][p.id] === undefined) state.squad[ev.id][p.id] = i < 10 ? 'in' : 'out';
-    });
-  });
-
-  // Demo-Feinschliff: Mia Schweizer (4) spielt genau eines ihrer angemeldeten Turniere
-  const miaId = 4;
-  const regTours = state.events.filter(e => e.type === 'tournament' && isPast(e.date) && getStatus(e.id, miaId) === 'coming');
-  if (regTours.length && getSquadInCount(miaId) === 0) {
-    const ev = regTours[0];
-    const swap = PLAYERS.find(p => p.id !== miaId && state.squad[ev.id][p.id] === 'in');
-    if (swap) state.squad[ev.id][swap.id] = 'out';
-    state.squad[ev.id][miaId] = 'in';
-  }
-}
-
 // ── State ──
 let state = {
   currentUser: null,   // { role: 'coach' | 'parent', playerId }
@@ -1846,8 +1802,6 @@ function loadState() {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
   }
-  seedPastAttendance();
-  seedPastSquad();
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   saveState();
 }
