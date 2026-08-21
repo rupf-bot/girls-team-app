@@ -701,6 +701,26 @@
   .status-icon.absent  { background: var(--red-light); color: var(--red); }
   .status-icon.injured { background: var(--orange-light); color: var(--orange); }
 
+  .status-btns { margin-left: auto; display: flex; gap: 4px; }
+  .status-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 2px solid var(--gray-200);
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .status-btn:active { transform: scale(0.92); }
+  .status-btn.coming.active  { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  .status-btn.absent.active  { background: var(--red-light); border-color: var(--red); color: var(--red); }
+  .status-btn.injured.active { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+
   /* ─── PLAYERS GRID ─── */
   .players-grid {
     display: grid;
@@ -1398,6 +1418,9 @@
     <div id="available-numbers" style="margin:0 16px 10px;padding:10px 14px;background:var(--blue-light);border-radius:12px;font-size:13px;font-weight:600;color:var(--navy)"></div>
     <div id="players-grid"></div>
     <div class="list-footer" id="players-footer"></div>
+    <div style="padding:20px 16px 100px">
+      <button onclick="resetAllEntries()" style="width:100%;padding:10px;border:1.5px solid #FCA5A5;border-radius:12px;background:#FEF2F2;color:#991B1B;font-weight:700;font-size:13px;cursor:pointer">Alle Anwesenheiten &amp; Aufgebote zurücksetzen</button>
+    </div>
   </div>
 
   <!-- PARENT HOME -->
@@ -1958,16 +1981,11 @@ function isAttending(eventId, playerId) {
   return getStatus(eventId, playerId) === 'coming';
 }
 
-function cycleStatus(eventId, playerId) {
+function setStatus(eventId, playerId, status) {
   if (!state.attendance[eventId]) state.attendance[eventId] = {};
-  const current = getStatus(eventId, playerId);
-  // open → coming → absent → injured → coming (kein automatischer Reset auf offen mehr,
-  // damit ein einmal gesetzter Status nie unabsichtlich durch Weiterklicken gelöscht wird)
-  const next = current === 'open' ? 'coming' : current === 'coming' ? 'absent' : current === 'absent' ? 'injured' : 'coming';
-  state.attendance[eventId][playerId] = next;
+  state.attendance[eventId][playerId] = status;
   saveState();
-  apiPatch({ action: 'setAttendance', eventId, playerId, status: next });
-  return next;
+  apiPatch({ action: 'setAttendance', eventId, playerId, status });
 }
 
 function toggleAttendance(eventId, playerId) {
@@ -2588,16 +2606,20 @@ function renderTrainingDetail(ev) {
 
   function playerRow(p, status) {
     const icon = status === 'open' ? '?' : status === 'coming' ? '✓' : status === 'absent' ? '✗' : '🩹';
-    const tooltip = status === 'open' ? 'Weiter: Dabei' : status === 'coming' ? 'Weiter: Abwesend' : status === 'absent' ? 'Weiter: Verletzt' : 'Weiter: Offen';
+    const control = isCoach
+      ? `<div class="status-btns">
+          <button class="status-btn coming ${status === 'coming' ? 'active' : ''}" onclick="coachSetStatus(${ev.id}, ${p.id}, 'coming')" title="Dabei">✓</button>
+          <button class="status-btn absent ${status === 'absent' ? 'active' : ''}" onclick="coachSetStatus(${ev.id}, ${p.id}, 'absent')" title="Abwesend">✗</button>
+          <button class="status-btn injured ${status === 'injured' ? 'active' : ''}" onclick="coachSetStatus(${ev.id}, ${p.id}, 'injured')" title="Krank/verletzt">🩹</button>
+        </div>`
+      : `<div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>`;
     return `
     <div class="player-row">
       <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
       <div>
         <div class="player-name">${p.name}</div>
       </div>
-      <button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})" title="${tooltip}">
-        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
-      </button>
+      ${control}
     </div>`;
   }
 
@@ -2669,10 +2691,12 @@ function renderTournamentDetail(ev) {
 
   function playerRowSimple(p, status) {
     const icon = status === 'open' ? '?' : status === 'absent' ? '✗' : '🩹';
-    const toggle = isCoach
-      ? `<button class="status-toggle" onclick="coachCycleStatus(${ev.id}, ${p.id})">
-        <div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>
-      </button>`
+    const control = isCoach
+      ? `<div class="status-btns">
+          <button class="status-btn coming" onclick="coachSetStatus(${ev.id}, ${p.id}, 'coming')" title="Dabei">✓</button>
+          <button class="status-btn absent ${status === 'absent' ? 'active' : ''}" onclick="coachSetStatus(${ev.id}, ${p.id}, 'absent')" title="Abwesend">✗</button>
+          <button class="status-btn injured ${status === 'injured' ? 'active' : ''}" onclick="coachSetStatus(${ev.id}, ${p.id}, 'injured')" title="Krank/verletzt">🩹</button>
+        </div>`
       : `<div class="status-icon ${status}" id="si-${ev.id}-${p.id}">${icon}</div>`;
     return `
     <div class="player-row">
@@ -2680,7 +2704,7 @@ function renderTournamentDetail(ev) {
       <div>
         <div class="player-name">${p.name}</div>
       </div>
-      ${toggle}
+      ${control}
     </div>`;
   }
 
@@ -2780,16 +2804,11 @@ function coachSetSquad(eventId, playerId, status) {
   showToast(status === 'in' ? `✓ Im Aufgebot (${squadCount}/10)` : `✗ Nicht berücksichtigt`);
 }
 
-function coachCycleStatus(eventId, playerId) {
-  const next = cycleStatus(eventId, playerId);
-  const icon = document.getElementById(`si-${eventId}-${playerId}`);
-  if (icon) {
-    icon.classList.add('animate-pulse');
-    setTimeout(() => icon.classList.remove('animate-pulse'), 250);
-  }
+function coachSetStatus(eventId, playerId, status) {
+  setStatus(eventId, playerId, status);
   const ev = state.events.find(e => e.id === eventId);
   if (ev) renderEventDetail(ev);
-  const msg = next === 'coming' ? '✓ Dabei markiert' : next === 'absent' ? '✗ Abwesend markiert' : next === 'injured' ? '🩹 Verletzt markiert' : '? Status zurückgesetzt';
+  const msg = status === 'coming' ? '✓ Dabei markiert' : status === 'absent' ? '✗ Abwesend markiert' : '🩹 Krank/verletzt markiert';
   showToast(msg);
 }
 
