@@ -1983,9 +1983,15 @@ function isAttending(eventId, playerId) {
 
 function setStatus(eventId, playerId, status) {
   if (!state.attendance[eventId]) state.attendance[eventId] = {};
-  state.attendance[eventId][playerId] = status;
+  if (state.attendance[eventId][playerId] === status) {
+    delete state.attendance[eventId][playerId]; // erneutes Tippen setzt zurück auf "offen"
+    status = 'open';
+  } else {
+    state.attendance[eventId][playerId] = status;
+  }
   saveState();
-  apiPatch({ action: 'setAttendance', eventId, playerId, status });
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: status === 'open' ? null : status });
+  return status;
 }
 
 function toggleAttendance(eventId, playerId) {
@@ -2805,10 +2811,10 @@ function coachSetSquad(eventId, playerId, status) {
 }
 
 function coachSetStatus(eventId, playerId, status) {
-  setStatus(eventId, playerId, status);
+  const next = setStatus(eventId, playerId, status);
   const ev = state.events.find(e => e.id === eventId);
   if (ev) renderEventDetail(ev);
-  const msg = status === 'coming' ? '✓ Dabei markiert' : status === 'absent' ? '✗ Abwesend markiert' : '🩹 Krank/verletzt markiert';
+  const msg = next === 'coming' ? '✓ Dabei markiert' : next === 'absent' ? '✗ Abwesend markiert' : next === 'injured' ? '🩹 Krank/verletzt markiert' : '? Status zurückgesetzt';
   showToast(msg);
 }
 
