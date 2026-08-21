@@ -2682,6 +2682,7 @@ function renderTournamentDetail(ev) {
       ? `<div class="squad-btns">
         <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
         <button class="squad-btn ${sqSt === 'out' ? 'out' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'out')" title="Nicht berücksichtigt">✗</button>
+        <button class="squad-btn" onclick="coachResetAttendance(${ev.id}, ${p.id})" title="Zurück auf keine Rückmeldung">↺</button>
       </div>`
       : `<div class="parent-squad-badge ${sqSt === 'in' ? 'in' : sqSt === 'out' ? 'out' : 'pending'}">${sqSt === 'in' ? 'Aufgebot ✓' : sqSt === 'out' ? 'Nicht dabei' : 'Offen'}</div>`;
     return `
@@ -2816,6 +2817,17 @@ function coachSetStatus(eventId, playerId, status) {
   if (ev) renderEventDetail(ev);
   const msg = next === 'coming' ? '✓ Dabei markiert' : next === 'absent' ? '✗ Abwesend markiert' : next === 'injured' ? '🩹 Krank/verletzt markiert' : '? Status zurückgesetzt';
   showToast(msg);
+}
+
+function coachResetAttendance(eventId, playerId) {
+  if (state.attendance[eventId]) delete state.attendance[eventId][playerId];
+  if (state.squad[eventId]) delete state.squad[eventId][playerId];
+  saveState();
+  apiPatch({ action: 'setAttendance', eventId, playerId, status: null });
+  apiPatch({ action: 'setSquad', eventId, playerId, status: null });
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderTournamentDetail(ev);
+  showToast('↺ Status zurückgesetzt');
 }
 
 function coachCycleStaffStatus(eventId, staffId) {
