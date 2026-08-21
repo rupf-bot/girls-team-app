@@ -93,6 +93,23 @@ async function rebuildCache(kv) {
   return state;
 }
 
+// Liest den bestehenden Cache (oder baut ihn einmalig neu auf, falls er fehlt).
+// Wichtig: Für einzelne Schreibaktionen NICHT rebuildCache() (= kv.list()) verwenden,
+// da Cloudflare KV list() nur "eventually consistent" ist — ein gerade geschriebener
+// Key kann dort für mehrere Sekunden noch fehlen. Ein Rebuild direkt nach dem Schreiben
+// würde den Cache dann mit einem Stand OHNE die neue Änderung überschreiben, und der
+// nächste Poll eines Clients zeigt den Status fälschlich wieder als zurückgesetzt an.
+// Stattdessen wird die bekannte Änderung direkt in den bestehenden Cache gepatcht.
+async function getCache(kv) {
+  const cached = await kv.get(CACHE_KEY, 'json');
+  if (cached) return cached;
+  return rebuildCache(kv);
+}
+
+async function putCache(kv, state) {
+  await kv.put(CACHE_KEY, JSON.stringify(state));
+}
+
 export async function onRequestGet(context) {
   const kv = context.env.TEAM_STATE;
   if (!kv) {
@@ -137,7 +154,15 @@ export async function onRequestPost(context) {
     } else {
       await kv.put(key, String(status));
     }
-    await rebuildCache(kv);
+    const field = action === 'setAttendance' ? 'attendance' : action === 'setSquad' ? 'squad' : 'staffAttendance';
+    const state = await getCache(kv);
+    if (!status || status === 'open') {
+      if (state[field][eventId]) delete state[field][eventId][personId];
+    } else {
+      state[field][eventId] = state[field][eventId] || {};
+      state[field][eventId][personId] = String(status);
+    }
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -147,7 +172,10 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'event ungültig' }), { status: 400 });
     }
     await kv.put(`ev:${event.id}`, JSON.stringify(event));
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    const idx = state.events.findIndex(e => e.id === event.id);
+    if (idx >= 0) state.events[idx] = event; else state.events.push(event);
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -167,7 +195,12 @@ export async function onRequestPost(context) {
       ...sqKeys.map(k => kv.delete(k.name)),
       ...staffKeys.map(k => kv.delete(k.name)),
     ]);
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    state.events = state.events.filter(e => e.id !== eventId);
+    delete state.attendance[eventId];
+    delete state.squad[eventId];
+    delete state.staffAttendance[eventId];
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -177,7 +210,10 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'player ungültig' }), { status: 400 });
     }
     await kv.put(`pl:${player.id}`, JSON.stringify(player));
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    const idx = state.players.findIndex(p => p.id === player.id);
+    if (idx >= 0) state.players[idx] = player; else state.players.push(player);
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -196,7 +232,11 @@ export async function onRequestPost(context) {
       ...matches(attKeys).map(k => kv.delete(k.name)),
       ...matches(sqKeys).map(k => kv.delete(k.name)),
     ]);
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    state.players = state.players.filter(p => p.id !== playerId);
+    Object.keys(state.attendance).forEach(evId => { delete state.attendance[evId][playerId]; });
+    Object.keys(state.squad).forEach(evId => { delete state.squad[evId][playerId]; });
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -221,7 +261,10 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'staff ungültig' }), { status: 400 });
     }
     await kv.put(`sf:${staff.id}`, JSON.stringify(staff));
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    const idx = state.staff.findIndex(s => s.id === staff.id);
+    if (idx >= 0) state.staff[idx] = staff; else state.staff.push(staff);
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
@@ -236,7 +279,10 @@ export async function onRequestPost(context) {
       kv.delete(`sf:${staffId}`),
       ...matches.map(k => kv.delete(k.name)),
     ]);
-    await rebuildCache(kv);
+    const state = await getCache(kv);
+    state.staff = state.staff.filter(s => s.id !== staffId);
+    Object.keys(state.staffAttendance).forEach(evId => { delete state.staffAttendance[evId][staffId]; });
+    await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
 
