@@ -505,6 +505,8 @@
     -webkit-tap-highlight-color: transparent;
   }
   .event-item.past { opacity: 0.5; cursor: default; }
+  .event-item.past.editable { opacity: 0.85; cursor: pointer; }
+  .past-edit-icon { font-size: 14px; color: var(--brand-blue-mid); }
   .event-date-col { text-align: center; min-width: 48px; }
   .event-date-day { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1; }
   .event-date-month { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -2121,6 +2123,16 @@ function isFutureDay(dateStr) {
   return d > today;
 }
 
+// Liegt das Datum kalendarisch vor heute (Uhrzeit wird ignoriert)?
+// Wird für den Hinweis "nachträgliche Anpassung möglich" in der Detailansicht genutzt.
+function isPastDay(dateStr) {
+  const d = parseDate(dateStr);
+  d.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d < today;
+}
+
 function formatDateMini(dateStr) {
   const d = parseDate(dateStr);
   return { day: d.getDate(), month: DE_MONTHS_SHORT[d.getMonth()], weekday: DE_DAYS_FULL[d.getDay()] };
@@ -2513,13 +2525,16 @@ function renderCoachEvents() {
   let upcoming = getUpcomingEvents().filter(ev => currentFilter === 'all' || ev.type === currentFilter);
   let past     = getPastEvents().filter(ev => currentFilter === 'all' || ev.type === currentFilter);
 
+  const isCoach = state.currentUser && state.currentUser.role === 'coach';
   let html = '';
   if (upcoming.length) {
     html += upcoming.map(ev => renderEventItem(ev, true)).join('');
   }
   if (past.length) {
     html += `<div class="past-divider"><hr><span>Vergangene Events</span><hr></div>`;
-    html += past.map(ev => renderEventItem(ev, false, true)).join('');
+    // Für den Coach bleiben vergangene Events antippbar, damit nachträgliche
+    // Statuskorrekturen (z.B. vergessene Rückmeldung) möglich sind.
+    html += past.map(ev => renderEventItem(ev, isCoach, true)).join('');
   }
   if (!upcoming.length && !past.length) {
     html = '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine Events</div></div>';
@@ -2533,8 +2548,8 @@ function renderEventItem(ev, clickable = true, isPastEv = false) {
   const { day, month, weekday } = formatDateMini(ev.date);
   const maxCount = isTrn ? PLAYERS.length : 10;
   const pct = Math.round(Math.min(count, maxCount) / maxCount * 100);
-  const pastClass = isPastEv ? 'past' : '';
-  const clickHandler = clickable && !isPastEv ? `onclick="openEventDetail(${ev.id})"` : '';
+  const pastClass = isPastEv ? `past${clickable ? ' editable' : ''}` : '';
+  const clickHandler = clickable ? `onclick="openEventDetail(${ev.id})"` : '';
   return `
     <div class="event-item ${pastClass}" ${clickHandler}>
       <div class="event-date-col">
@@ -2553,6 +2568,7 @@ function renderEventItem(ev, clickable = true, isPastEv = false) {
       </div>
       <div class="event-right">
         ${!isPastEv ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="2.5" class="chevron"><polyline points="9 18 15 12 9 6"/></svg>' : ''}
+        ${isPastEv && clickable ? '<span class="past-edit-icon" title="Nachträglich bearbeitbar">✎</span>' : ''}
       </div>
     </div>`;
 }
@@ -2595,6 +2611,7 @@ function renderTrainingDetail(ev) {
   const isCoach = state.currentUser && state.currentUser.role === 'coach';
   // Coach soll Anwesenheit erst am Trainingstag selbst setzen können, nicht schon vorher.
   const editable = !isFutureDay(ev.date);
+  const isPastEv = isPastDay(ev.date);
 
   const planBlocks   = (ev.plan && ev.plan.blocks) || [];
   const filledBlocks = planBlocks.filter(b => b.text && b.text.trim());
@@ -2656,6 +2673,7 @@ function renderTrainingDetail(ev) {
     </div>
     ${planSection}
     ${isCoach && !editable ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--gray-50,#F1F5F9);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gray-500);display:flex;align-items:center;gap:8px">🔒 Bearbeitbar erst am Trainingstag</div></div>` : ''}
+    ${isCoach && isPastEv ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-blue-mid);display:flex;align-items:center;gap:8px">✎ Vergangenes Training – nachträgliche Anpassung möglich</div></div>` : ''}
     <div class="attendance-big">
       <div><span class="attendance-number">${count}</span><span class="attendance-denom"> / ${PLAYERS.length}</span></div>
       <div class="attendance-label">Spielerinnen dabei</div>
@@ -2676,6 +2694,7 @@ function renderTrainingDetail(ev) {
 function renderTournamentDetail(ev) {
   const MAX_SQUAD = 10;
   const isCoach = state.currentUser && state.currentUser.role === 'coach';
+  const isPastEv = isPastDay(ev.date);
   const currentPlayerId = state.currentUser && state.currentUser.playerId;
   const open    = getOpenPlayers(ev.id);
   const coming  = getComingPlayers(ev.id);
@@ -2757,6 +2776,7 @@ function renderTournamentDetail(ev) {
       ${isCoach ? `<button onclick="openEditTournament(${ev.id})" style="grid-column:1/-1;background:none;border:none;color:var(--brand-blue-mid);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0;text-align:left">✎ Datum, Uhrzeit oder Ort anpassen</button>` : ''}
       <a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="grid-column:1/-1;color:var(--brand-blue-mid);font-size:13px;font-weight:700;text-decoration:none;padding:4px 0">📅 Zum Google Kalender hinzufügen</a>
     </div>
+    ${isCoach && isPastEv ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-blue-mid);display:flex;align-items:center;gap:8px">✎ Vergangenes Turnier – nachträgliche Anpassung möglich</div></div>` : ''}
     ${myStatusSection}
 
     ${isCoach ? `
