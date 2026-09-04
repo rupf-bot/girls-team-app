@@ -9,6 +9,7 @@
 //   att:<eventId>:<playerId>     → Anwesenheits-Status ('coming'|'absent'|'injured')
 //   sq:<eventId>:<playerId>      → Aufgebot-Status ('in'|'out')
 //   staff:<eventId>:<staffId>    → Staff-Status ('coming'|'absent'|'injured')
+//   note:<eventId>:<playerId>    → JSON Verhinderungsgrund-Notiz {text, ts, seen, reply?, replyTs?}
 //
 // Zusätzlich wird unter dem Key "full:state" ein aggregierter Cache des kompletten
 // Zustands gepflegt (JSON von {events,attendance,squad,staffAttendance}). Lese-Zugriffe
@@ -44,13 +45,14 @@ async function listAll(kv, prefix) {
 }
 
 async function buildState(kv) {
-  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys] = await Promise.all([
+  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys, noteKeys] = await Promise.all([
     listAll(kv, 'ev:'),
     listAll(kv, 'pl:'),
     listAll(kv, 'sf:'),
     listAll(kv, 'att:'),
     listAll(kv, 'sq:'),
     listAll(kv, 'staff:'),
+    listAll(kv, 'note:'),
   ]);
 
   const events = (await Promise.all(evKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
@@ -84,7 +86,16 @@ async function buildState(kv) {
     staffAttendance[eventId][staffId] = status;
   }));
 
-  return { events, players, staff, attendance, squad, staffAttendance };
+  const notes = {};
+  await Promise.all(noteKeys.map(async k => {
+    const [, eventId, playerId] = k.name.split(':');
+    const note = await kv.get(k.name, 'json');
+    if (!note) return;
+    notes[eventId] = notes[eventId] || {};
+    notes[eventId][playerId] = note;
+  }));
+
+  return { events, players, staff, attendance, squad, staffAttendance, notes };
 }
 
 async function rebuildCache(kv) {
@@ -166,6 +177,50 @@ export async function onRequestPost(context) {
     return new Response(JSON.stringify({ ok: true }));
   }
 
+  if (action === 'setAttendanceNote') {
+    const { eventId, playerId, text } = body;
+    if (!isFiniteId(eventId) || !isFiniteId(playerId)) {
+      return new Response(JSON.stringify({ error: 'eventId/playerId ungültig' }), { status: 400 });
+    }
+    const key = `note:${eventId}:${playerId}`;
+    const state = await getCache(kv);
+    state.notes[eventId] = state.notes[eventId] || {};
+    const trimmed = (text || '').trim();
+    if (!trimmed) {
+      await kv.delete(key);
+      delete state.notes[eventId][playerId];
+    } else {
+      const existing = state.notes[eventId][playerId];
+      const note = { text: trimmed, ts: Date.now(), seen: false, reply: existing ? existing.reply : null, replyTs: existing ? existing.replyTs : null };
+      await kv.put(key, JSON.stringify(note));
+      state.notes[eventId][playerId] = note;
+    }
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'ackAttendanceNote' || action === 'replyAttendanceNote') {
+    const { eventId, playerId, reply } = body;
+    if (!isFiniteId(eventId) || !isFiniteId(playerId)) {
+      return new Response(JSON.stringify({ error: 'eventId/playerId ungültig' }), { status: 400 });
+    }
+    const key = `note:${eventId}:${playerId}`;
+    const state = await getCache(kv);
+    const existing = state.notes[eventId] && state.notes[eventId][playerId];
+    if (!existing) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }));
+    }
+    existing.seen = true;
+    if (action === 'replyAttendanceNote' && reply) {
+      existing.reply = String(reply).trim();
+      existing.replyTs = Date.now();
+    }
+    await kv.put(key, JSON.stringify(existing));
+    state.notes[eventId][playerId] = existing;
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
   if (action === 'upsertEvent') {
     const { event } = body;
     if (!event || !isFiniteId(event.id)) {
@@ -184,22 +239,25 @@ export async function onRequestPost(context) {
     if (!isFiniteId(eventId)) {
       return new Response(JSON.stringify({ error: 'eventId ungültig' }), { status: 400 });
     }
-    const [attKeys, sqKeys, staffKeys] = await Promise.all([
+    const [attKeys, sqKeys, staffKeys, noteKeys] = await Promise.all([
       listAll(kv, `att:${eventId}:`),
       listAll(kv, `sq:${eventId}:`),
       listAll(kv, `staff:${eventId}:`),
+      listAll(kv, `note:${eventId}:`),
     ]);
     await Promise.all([
       kv.delete(`ev:${eventId}`),
       ...attKeys.map(k => kv.delete(k.name)),
       ...sqKeys.map(k => kv.delete(k.name)),
       ...staffKeys.map(k => kv.delete(k.name)),
+      ...noteKeys.map(k => kv.delete(k.name)),
     ]);
     const state = await getCache(kv);
     state.events = state.events.filter(e => e.id !== eventId);
     delete state.attendance[eventId];
     delete state.squad[eventId];
     delete state.staffAttendance[eventId];
+    delete state.notes[eventId];
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
@@ -222,20 +280,23 @@ export async function onRequestPost(context) {
     if (!isFiniteId(playerId)) {
       return new Response(JSON.stringify({ error: 'playerId ungültig' }), { status: 400 });
     }
-    const [attKeys, sqKeys] = await Promise.all([
+    const [attKeys, sqKeys, noteKeys] = await Promise.all([
       listAll(kv, 'att:'),
       listAll(kv, 'sq:'),
+      listAll(kv, 'note:'),
     ]);
     const matches = (keys) => keys.filter(k => k.name.split(':')[2] === String(playerId));
     await Promise.all([
       kv.delete(`pl:${playerId}`),
       ...matches(attKeys).map(k => kv.delete(k.name)),
       ...matches(sqKeys).map(k => kv.delete(k.name)),
+      ...matches(noteKeys).map(k => kv.delete(k.name)),
     ]);
     const state = await getCache(kv);
     state.players = state.players.filter(p => p.id !== playerId);
     Object.keys(state.attendance).forEach(evId => { delete state.attendance[evId][playerId]; });
     Object.keys(state.squad).forEach(evId => { delete state.squad[evId][playerId]; });
+    Object.keys(state.notes).forEach(evId => { if (state.notes[evId]) delete state.notes[evId][playerId]; });
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
