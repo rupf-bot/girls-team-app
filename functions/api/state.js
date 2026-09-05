@@ -113,7 +113,13 @@ async function rebuildCache(kv) {
 // Stattdessen wird die bekannte Änderung direkt in den bestehenden Cache gepatcht.
 async function getCache(kv) {
   const cached = await kv.get(CACHE_KEY, 'json');
-  if (cached) return cached;
+  if (cached) {
+    // Absicherung: Falls der Cache vor Einführung eines neuen State-Felds (z.B. "notes")
+    // geschrieben wurde, fehlt dieses Feld im alten Blob und würde bei state.<feld>[x] = ...
+    // sofort crashen. Fehlende Felder hier defensiv nachrüsten statt teuren Rebuild zu erzwingen.
+    cached.notes = cached.notes || {};
+    return cached;
+  }
   return rebuildCache(kv);
 }
 
