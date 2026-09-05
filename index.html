@@ -1436,6 +1436,7 @@
       </div>
     </div>
     <div class="scroll-content-parent">
+      <div id="parent-notes-wrap"></div>
       <!-- 1. Next event: primary action -->
       <div class="section-label">Nächster Event</div>
       <div id="parent-home-hero"></div>
@@ -2051,7 +2052,13 @@ function setNoteText(eventId, playerId, text) {
   } else {
     const existing = getNote(eventId, playerId);
     state.notes[eventId] = state.notes[eventId] || {};
-    state.notes[eventId][playerId] = { text: trimmed, ts: Date.now(), seen: false, reply: existing ? existing.reply : null, replyTs: existing ? existing.replyTs : null };
+    state.notes[eventId][playerId] = {
+      text: trimmed, ts: Date.now(), seen: false,
+      reply: existing ? existing.reply : null,
+      replyTs: existing ? existing.replyTs : null,
+      replySeenByParent: existing ? existing.replySeenByParent : null,
+      closedByCoach: false, closedByParent: false,
+    };
   }
   saveState();
   apiPatch({ action: 'setAttendanceNote', eventId, playerId, text: trimmed });
@@ -2065,6 +2072,14 @@ function ackNote(eventId, playerId) {
   apiPatch({ action: 'ackAttendanceNote', eventId, playerId });
 }
 
+function ackNoteReply(eventId, playerId) {
+  const n = getNote(eventId, playerId);
+  if (!n || !n.reply || n.replySeenByParent) return;
+  n.replySeenByParent = true;
+  saveState();
+  apiPatch({ action: 'ackAttendanceNoteReply', eventId, playerId });
+}
+
 function replyNote(eventId, playerId, reply) {
   const trimmed = (reply || '').trim();
   if (!trimmed) return;
@@ -2072,10 +2087,26 @@ function replyNote(eventId, playerId, reply) {
   existing.reply = trimmed;
   existing.replyTs = Date.now();
   existing.seen = true;
+  existing.replySeenByParent = false;
+  existing.closedByCoach = false;
+  existing.closedByParent = false;
   state.notes[eventId] = state.notes[eventId] || {};
   state.notes[eventId][playerId] = existing;
   saveState();
   apiPatch({ action: 'replyAttendanceNote', eventId, playerId, reply: trimmed });
+}
+
+// Blendet eine Meldung/Unterhaltung aus der jeweiligen Home-Übersicht aus (pro Seite
+// unabhängig), damit sie dort nicht dauerhaft sichtbar bleibt. Die Notiz selbst (inkl.
+// Antwort) bleibt erhalten und wird bei neuer Aktivität (neue Notiz/Antwort) automatisch
+// wieder eingeblendet.
+function closeNoteEntry(eventId, playerId, side) {
+  const n = getNote(eventId, playerId);
+  if (!n) return;
+  if (side === 'coach') n.closedByCoach = true; else n.closedByParent = true;
+  saveState();
+  apiPatch({ action: 'closeAttendanceNote', eventId, playerId, side });
+  if (side === 'coach') renderCoachNotes(); else renderParentNotes();
 }
 
 function getUnseenNoteCount() {
@@ -2142,6 +2173,7 @@ function openNoteModal(eventId, playerId, mode) {
     if (note && note.reply) {
       replyDisplay.style.display = 'block';
       replyDisplay.textContent = `💬 Trainer: ${note.reply}`;
+      ackNoteReply(eventId, playerId);
     } else {
       replyDisplay.style.display = 'none';
     }
@@ -2607,7 +2639,7 @@ function renderCoachNotes() {
     const evEntries = state.notes[evId] || {};
     Object.keys(evEntries).forEach(playerId => {
       const note = evEntries[playerId];
-      if (note && note.text) entries.push({ eventId: Number(evId), playerId: Number(playerId), note });
+      if (note && note.text && !note.closedByCoach) entries.push({ eventId: Number(evId), playerId: Number(playerId), note });
     });
   });
   if (!entries.length) { wrap.innerHTML = ''; return; }
@@ -2627,10 +2659,44 @@ function renderCoachNotes() {
         ${note.reply ? `<div style="font-size:12px;color:var(--gray-500);margin-top:2px">💬 Deine Antwort: ${note.reply}</div>` : ''}
       </div>
       ${unseen ? `<div style="width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>` : ''}
+      <div onclick="event.stopPropagation();closeNoteEntry(${eventId}, ${playerId}, 'coach')" title="Ausblenden" style="flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:15px;cursor:pointer">✕</div>
     </div>`;
   }).join('');
   wrap.innerHTML = `
     <div class="section-label">📬 Meldungen von Eltern${unseenCount ? ` <span style="color:var(--red)">(${unseenCount} neu)</span>` : ''}</div>
+    <div style="padding:0 20px">${rows}</div>`;
+}
+
+function renderParentNotes() {
+  const wrap = document.getElementById('parent-notes-wrap');
+  if (!wrap) return;
+  const player = PLAYERS.find(p => p.id === state.currentUser.playerId);
+  if (!player) { wrap.innerHTML = ''; return; }
+  const entries = [];
+  Object.keys(state.notes).forEach(evId => {
+    const note = state.notes[evId] && state.notes[evId][player.id];
+    if (note && note.text && !note.closedByParent) entries.push({ eventId: Number(evId), note });
+  });
+  if (!entries.length) { wrap.innerHTML = ''; return; }
+  entries.sort((a, b) => b.note.ts - a.note.ts);
+  const unseenCount = entries.filter(e => e.note.reply && !e.note.replySeenByParent).length;
+  const rows = entries.slice(0, 8).map(({ eventId, note }) => {
+    const ev = state.events.find(e => e.id === eventId);
+    const evLabel = ev ? `${ev.type === 'training' ? '⚽' : '🏆'} ${formatDateShort(ev.date)}` : '';
+    const unseen = note.reply && !note.replySeenByParent;
+    return `
+    <div onclick="openNoteModal(${eventId}, ${player.id}, 'parent')" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:${unseen ? 'var(--red-light)' : 'var(--gray-150)'};border-radius:12px;margin-bottom:8px;cursor:pointer">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--navy)">${evLabel}</div>
+        <div style="font-size:13px;color:var(--navy);margin-top:2px">📝 ${note.text}</div>
+        ${note.reply ? `<div style="font-size:12px;font-weight:700;color:var(--navy);margin-top:2px">💬 Trainer: ${note.reply}</div>` : `<div style="font-size:12px;color:var(--gray-500);margin-top:2px">Wartet auf Antwort vom Trainer …</div>`}
+      </div>
+      ${unseen ? `<div style="width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>` : ''}
+      <div onclick="event.stopPropagation();closeNoteEntry(${eventId}, ${player.id}, 'parent')" title="Ausblenden" style="flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:15px;cursor:pointer">✕</div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `
+    <div class="section-label">📬 Deine Meldungen${unseenCount ? ` <span style="color:var(--red)">(${unseenCount} neu)</span>` : ''}</div>
     <div style="padding:0 20px">${rows}</div>`;
 }
 
@@ -3631,6 +3697,7 @@ function renderParentHome() {
   if (!player) return;
 
   document.getElementById('parent-home-name').textContent = 'Hallo ' + player.name.split(' ')[0];
+  renderParentNotes();
 
   // 1. Next event as hero with direct status actions
   const next = getNextActionableEvent(player.id);

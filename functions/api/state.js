@@ -9,7 +9,9 @@
 //   att:<eventId>:<playerId>     → Anwesenheits-Status ('coming'|'absent'|'injured')
 //   sq:<eventId>:<playerId>      → Aufgebot-Status ('in'|'out')
 //   staff:<eventId>:<staffId>    → Staff-Status ('coming'|'absent'|'injured')
-//   note:<eventId>:<playerId>    → JSON Verhinderungsgrund-Notiz {text, ts, seen, reply?, replyTs?}
+//   note:<eventId>:<playerId>    → JSON Verhinderungsgrund-Notiz
+//                                   {text, ts, seen, reply?, replyTs?, replySeenByParent?,
+//                                    closedByCoach?, closedByParent?}
 //
 // Zusätzlich wird unter dem Key "full:state" ein aggregierter Cache des kompletten
 // Zustands gepflegt (JSON von {events,attendance,squad,staffAttendance}). Lese-Zugriffe
@@ -197,7 +199,13 @@ export async function onRequestPost(context) {
       delete state.notes[eventId][playerId];
     } else {
       const existing = state.notes[eventId][playerId];
-      const note = { text: trimmed, ts: Date.now(), seen: false, reply: existing ? existing.reply : null, replyTs: existing ? existing.replyTs : null };
+      const note = {
+        text: trimmed, ts: Date.now(), seen: false,
+        reply: existing ? existing.reply : null,
+        replyTs: existing ? existing.replyTs : null,
+        replySeenByParent: existing ? existing.replySeenByParent : null,
+        closedByCoach: false, closedByParent: false,
+      };
       await kv.put(key, JSON.stringify(note));
       state.notes[eventId][playerId] = note;
     }
@@ -220,7 +228,46 @@ export async function onRequestPost(context) {
     if (action === 'replyAttendanceNote' && reply) {
       existing.reply = String(reply).trim();
       existing.replyTs = Date.now();
+      existing.replySeenByParent = false;
+      existing.closedByCoach = false;
+      existing.closedByParent = false;
     }
+    await kv.put(key, JSON.stringify(existing));
+    state.notes[eventId][playerId] = existing;
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'ackAttendanceNoteReply') {
+    const { eventId, playerId } = body;
+    if (!isFiniteId(eventId) || !isFiniteId(playerId)) {
+      return new Response(JSON.stringify({ error: 'eventId/playerId ungültig' }), { status: 400 });
+    }
+    const key = `note:${eventId}:${playerId}`;
+    const state = await getCache(kv);
+    const existing = state.notes[eventId] && state.notes[eventId][playerId];
+    if (!existing) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }));
+    }
+    existing.replySeenByParent = true;
+    await kv.put(key, JSON.stringify(existing));
+    state.notes[eventId][playerId] = existing;
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'closeAttendanceNote') {
+    const { eventId, playerId, side } = body;
+    if (!isFiniteId(eventId) || !isFiniteId(playerId) || (side !== 'coach' && side !== 'parent')) {
+      return new Response(JSON.stringify({ error: 'Parameter ungültig' }), { status: 400 });
+    }
+    const key = `note:${eventId}:${playerId}`;
+    const state = await getCache(kv);
+    const existing = state.notes[eventId] && state.notes[eventId][playerId];
+    if (!existing) {
+      return new Response(JSON.stringify({ ok: true, skipped: true }));
+    }
+    if (side === 'coach') existing.closedByCoach = true; else existing.closedByParent = true;
     await kv.put(key, JSON.stringify(existing));
     state.notes[eventId][playerId] = existing;
     await putCache(kv, state);
