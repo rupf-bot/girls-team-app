@@ -1786,6 +1786,7 @@ function generateTrainings() {
 
 // Turniere: Meisterschaftsspiele JF-D (BRACK.CH pmf, FVRZ), meist Sonntag, teils Samstag.
 // Ort/Zeit gemäss Spielbetrieb-App (Stand 11.08.26), 5 bestätigte Termine Herbstrunde.
+// Dazu 2 bestätigte Hallenturniere (Turnieragenda, Stand 06.09.26).
 // Weitere Termine (inkl. Rückrunde 2027) folgen separat, sobald bestätigt.
 function generateTournaments() {
   const matches = [
@@ -1794,6 +1795,8 @@ function generateTournaments() {
     { date: '2026-09-13', time: '09:30', location: 'Gheid · Buchs ZH' },
     { date: '2026-09-19', time: '10:00', location: 'Heerenschürli · Zürich' },
     { date: '2026-09-26', time: '10:00', location: 'Witikon · Zürich' },
+    { date: '2026-12-12', time: '00:00', location: 'Hallenturnier FFC Südost · Zürich (Zeit folgt)' },
+    { date: '2027-01-17', time: '11:30', location: 'Hallenturnier FC Urdorf' },
   ];
   let id = 201;
   return matches.map(m => {
@@ -1865,7 +1868,7 @@ function loadState() {
 // bereinigter Serverstand (KV) sonst die lokale Bereinigung wieder überschreiben würde.
 function pruneObsoleteEvents() {
   const seasonStart = new Date('2026-08-01T00:00:00');
-  const seasonEnd = new Date('2027-01-01T00:00:00');
+  const seasonEnd = new Date('2027-02-01T00:00:00');
   const obsolete = state.events.filter(e => {
     const d = new Date(e.date);
     return d < seasonStart || d >= seasonEnd;
