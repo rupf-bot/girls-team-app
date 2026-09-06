@@ -1564,6 +1564,13 @@
           <label class="form-label">Ort / Adresse</label>
           <input class="form-input" type="text" id="t-location" placeholder="z. B. Sportanlage Hönggerberg">
         </div>
+        <div class="form-group">
+          <label class="form-label">Art</label>
+          <select class="form-input" id="t-tag">
+            <option value="Turnier">Turnier</option>
+            <option value="Hallenturnier">Hallenturnier</option>
+          </select>
+        </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" onclick="closeTournamentModal()">Abbrechen</button>
           <button class="btn btn-primary" onclick="saveTournament()" style="margin-top:0">Speichern</button>
@@ -1795,8 +1802,8 @@ function generateTournaments() {
     { date: '2026-09-13', time: '09:30', location: 'Gheid · Buchs ZH' },
     { date: '2026-09-19', time: '10:00', location: 'Heerenschürli · Zürich' },
     { date: '2026-09-26', time: '10:00', location: 'Witikon · Zürich' },
-    { date: '2026-12-12', time: '00:00', location: 'Hallenturnier FFC Südost · Zürich (Zeit folgt)' },
-    { date: '2027-01-17', time: '11:30', location: 'Hallenturnier FC Urdorf' },
+    { date: '2026-12-12', time: '00:00', location: 'FFC Südost · Zürich (Zeit folgt)', title: 'Hallenturnier' },
+    { date: '2027-01-17', time: '11:30', location: 'FC Urdorf', title: 'Hallenturnier' },
   ];
   let id = 201;
   return matches.map(m => {
@@ -1806,7 +1813,7 @@ function generateTournaments() {
       type: 'tournament',
       date: d.toISOString(),
       location: m.location || 'Ort und Zeit folgen während der Saison',
-      title: 'Turnier',
+      title: m.title || 'Turnier',
     };
   });
 }
@@ -2829,7 +2836,7 @@ function renderEventItem(ev, clickable = true, isPastEv = false) {
         <div class="event-date-weekday">${weekday}</div>
       </div>
       <div class="event-info">
-        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 ' + (ev.title || 'Turnier')}</div>
         <div class="event-name">${formatTime(ev.date)} Uhr</div>
         <div class="event-meta">📍 ${ev.location}</div>
         ${!isPastEv ? `<div class="event-attendance">
@@ -2860,7 +2867,7 @@ function openEventDetail(eventId) {
 
 function renderEventDetail(ev) {
   const isTrn = ev.type === 'training';
-  document.getElementById('detail-header-title').textContent = isTrn ? 'Training' : 'Turnier';
+  document.getElementById('detail-header-title').textContent = isTrn ? 'Training' : (ev.title || 'Turnier');
   const isCoach = state.currentUser && state.currentUser.role === 'coach';
   const deleteBtn = document.getElementById('detail-delete-btn');
   if (deleteBtn) deleteBtn.style.display = isCoach ? 'flex' : 'none';
@@ -3039,7 +3046,7 @@ function renderTournamentDetail(ev) {
     <div class="detail-type-banner tournament">
       <div class="detail-type-banner-icon">🏆</div>
       <div>
-        <div class="detail-type-banner-badge">Turnier</div>
+        <div class="detail-type-banner-badge">${ev.title || 'Turnier'}</div>
         <div class="detail-type-banner-title">${formatDateShort(ev.date)}</div>
       </div>
     </div>
@@ -3596,7 +3603,7 @@ function deleteCurrentEvent() {
   if (!currentDetailEventId) return;
   const ev = state.events.find(e => e.id === currentDetailEventId);
   if (!ev) return;
-  const label = ev.type === 'training' ? 'Training' : 'Turnier';
+  const label = ev.type === 'training' ? 'Training' : (ev.title || 'Turnier');
   if (!confirm(`${label} vom ${formatDateShort(ev.date)} wirklich löschen?`)) return;
   const deletedId = currentDetailEventId;
   state.events = state.events.filter(e => e.id !== deletedId);
@@ -3623,6 +3630,7 @@ function openAddTournament() {
   document.getElementById('t-date').value = d.toISOString().split('T')[0];
   document.getElementById('t-time').value = '09:00';
   document.getElementById('t-location').value = '';
+  document.getElementById('t-tag').value = 'Turnier';
   document.getElementById('tournament-modal').classList.add('open');
 }
 
@@ -3635,6 +3643,7 @@ function openEditTournament(eventId) {
   document.getElementById('t-date').value = d.toISOString().split('T')[0];
   document.getElementById('t-time').value = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   document.getElementById('t-location').value = ev.location;
+  document.getElementById('t-tag').value = ev.title === 'Hallenturnier' ? 'Hallenturnier' : 'Turnier';
   document.getElementById('tournament-modal').classList.add('open');
 }
 
@@ -3658,12 +3667,14 @@ function saveTournament() {
   }
 
   const dateStr = `${dateVal}T${timeVal}:00`;
+  const tagVal  = document.getElementById('t-tag').value;
 
   if (editingTournamentId) {
     const ev = state.events.find(e => e.id === editingTournamentId);
     if (!ev) { closeTournamentModal(); return; }
     ev.date = dateStr;
     ev.location = locVal;
+    ev.title = tagVal;
     state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
     saveState();
     apiPatch({ action: 'upsertEvent', event: ev });
@@ -3679,7 +3690,7 @@ function saveTournament() {
     type: 'tournament',
     date: dateStr,
     location: locVal,
-    title: 'Turnier',
+    title: tagVal,
   };
   state.events.push(newEvent);
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -3771,7 +3782,7 @@ function renderParentHero(ev, playerId) {
   const calendarLink = !isTrn ? `<a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:white;font-size:12px;font-weight:700;text-decoration:underline">📅 Zum Google Kalender hinzufügen</a>` : '';
   return `
     <div class="parent-hero-card ${heroClass}">
-      <div class="parent-hero-title">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+      <div class="parent-hero-title">${isTrn ? '⚽ Training' : '🏆 ' + (ev.title || 'Turnier')}</div>
       <div class="parent-hero-event">${formatDateShort(ev.date)}</div>
       <div class="parent-hero-date">${formatTime(ev.date)} Uhr · ${ev.location}</div>
       <div class="parent-status-text">${statusText}</div>
@@ -4060,7 +4071,7 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
         <div class="event-date-weekday">${weekday}</div>
       </div>
       <div class="event-info">
-        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 Turnier'}</div>
+        <div class="event-type-badge ${isTrn ? 'badge-training' : 'badge-tournament'}">${isTrn ? '⚽ Training' : '🏆 ' + (ev.title || 'Turnier')}</div>
         <div class="event-name">${formatTime(ev.date)} Uhr</div>
         <div class="event-meta">📍 ${ev.location}</div>
         ${!pastEv ? `<div class="event-attendance">
