@@ -4123,11 +4123,14 @@ function init() {
         showPage('page-parent-home', false);
         syncNavActive('page-parent-home');
       }
-      syncFromServer();
-      startSyncPolling();
-      return;
     } catch(e) {}
   }
+
+  // Immer frisch vom Server synchronisieren, auch ohne bestehende Session —
+  // sonst zeigt die Eltern-Auswahl beim Login nur die alte/hartcodierte
+  // Spielerinnen-Liste und neu hinzugefügte Kinder fehlen (siehe refreshChildSelect).
+  syncFromServer();
+  startSyncPolling();
 }
 
 let syncPollTimer = null;
