@@ -14,6 +14,9 @@ function loginPage(showError) {
   return `<!DOCTYPE html>
 <html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SV Höngg Juniorinnen EMa</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon-180.png">
+<link rel="icon" href="/icon-192.png" type="image/png">
 <style>
   html, body { height:100%; overscroll-behavior:none; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background:#F3F3F3; display:flex; align-items:center; justify-content:center; min-height:100vh; min-height:100dvh; margin:0; color:#0F172A; -webkit-font-smoothing:antialiased; overflow:hidden; }
@@ -57,7 +60,7 @@ function loginPage(showError) {
 </body></html>`;
 }
 
-const STATIC_ASSET_EXTENSIONS = /\.(png|jpg|jpeg|svg|webp|ico|gif)$/i;
+const STATIC_ASSET_EXTENSIONS = /\.(png|jpg|jpeg|svg|webp|ico|gif|json)$/i;
 
 export async function onRequest(context) {
   const { request, env, next } = context;
