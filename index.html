@@ -261,7 +261,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 24px 32px;
+    padding: 48px 24px 32px;
   }
   .login-logo { margin-bottom: 32px; line-height: 1; margin-top: 16px; }
   .login-logo img { height: 104px; width: auto; display: block; margin: 0 auto; }
@@ -1313,9 +1313,9 @@
             </select>
           </div>
         </div>
-        <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="background:var(--gray-100);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:10px;text-decoration:none">
+        <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="background:white;border:1.5px solid var(--gray-200);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:10px;text-decoration:none">
           <div style="font-size:20px;line-height:1">🏟️</div>
-          <div style="font-size:14px;font-weight:700;color:var(--navy)">Platzeinteilung Hönggerberg</div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">Platzeinteilung</div>
         </a>
         <div id="coach-card" style="padding:16px 4px 0">
           <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-500);margin-bottom:10px">Coach-Login</div>
@@ -2958,7 +2958,7 @@ function renderTrainingDetail(ev) {
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
     </div>
     <div class="section-padding" style="margin-top:6px">
-      <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a>
+      <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung</a>
     </div>
     ${planSection}
     ${isCoach && !editable ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--gray-50,#F1F5F9);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gray-500);display:flex;align-items:center;gap:8px">🔒 Bearbeitbar erst am Trainingstag</div></div>` : ''}
@@ -4050,8 +4050,7 @@ function renderParentAll() {
   const f = parentEventFilter;
   const upcoming = getUpcomingEvents().filter(ev => f === 'all' || ev.type === f);
   const listLabel = f === 'training' ? 'Alle Trainings' : f === 'tournament' ? 'Alle Turniere' : 'Alle Events';
-  const platzLink = f === 'training' ? `<a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--gray-500);text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:normal">🏟️ Platzeinteilung Hönggerberg</a>` : '';
-  const listHeader = `<div class="section-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">${listLabel}${platzLink}</div>`;
+  const listHeader = `<div class="section-label">${listLabel}</div>`;
 
   const listHtml = upcoming.map(ev => renderParentEventItemFull(ev, player.id, false)).join('');
   document.getElementById('parent-all-list').innerHTML = listHeader + (listHtml || '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine kommenden Events</div></div>');
