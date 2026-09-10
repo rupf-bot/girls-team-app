@@ -2953,11 +2953,8 @@ function renderTrainingDetail(ev) {
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
     </div>
-    <div class="section-padding" style="margin-top:8px">
-      <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--gray-100);border-radius:10px;text-decoration:none">
-        <span style="font-size:15px;line-height:1">🏟️</span>
-        <span style="font-size:13px;font-weight:700;color:var(--navy)">Platzeinteilung Hönggerberg</span>
-      </a>
+    <div class="section-padding" style="margin-top:6px">
+      <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a>
     </div>
     ${planSection}
     ${isCoach && !editable ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--gray-50,#F1F5F9);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gray-500);display:flex;align-items:center;gap:8px">🔒 Bearbeitbar erst am Trainingstag</div></div>` : ''}
@@ -3796,6 +3793,7 @@ function renderParentHero(ev, playerId) {
       <div class="parent-hero-date">${formatTime(ev.date)} Uhr · ${ev.location}</div>
       <div class="parent-status-text">${statusText}</div>
       ${actionArea}
+      ${isTrn ? `<div onclick="event.stopPropagation()" style="margin-top:6px"><a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:rgba(255,255,255,0.85);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a></div>` : ''}
       <div class="hero-attendance">
         <div class="hero-attendance-text">${label}</div>
         <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
@@ -4106,6 +4104,7 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
         <button class="list-status-btn injured ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>` : ''}
       ${expanded ? `<div onclick="event.stopPropagation()">${renderParentNoteLine(ev.id, playerId, false)}</div>` : ''}
+      ${expanded && isTrn ? `<div onclick="event.stopPropagation()" style="margin-top:6px"><a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a></div>` : ''}
     </div>`;
 }
 
