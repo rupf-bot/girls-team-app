@@ -1311,10 +1311,6 @@
             <select class="form-select" id="child-select" onchange="this.classList.toggle('has-value', !!this.value); if(this.value) doParentLogin()">
               <option value="">Name wählen...</option>
             </select>
-            <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&amp;m=Gr%C3%BCnStadtZ%C3%BCrich&amp;size=1&amp;add=31" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 10px;background:var(--gray-100);border-radius:10px;text-decoration:none">
-              <span style="font-size:15px;line-height:1">🏟️</span>
-              <span style="font-size:13px;font-weight:700;color:var(--navy)">Platzeinteilung Hönggerberg</span>
-            </a>
           </div>
         </div>
         <div id="coach-card" style="padding:16px 4px 0">
@@ -2956,6 +2952,12 @@ function renderTrainingDetail(ev) {
       <div class="detail-info-item"><label>Datum</label><span>${formatDateLong(ev.date)}</span></div>
       <div class="detail-info-item"><label>Uhrzeit</label><span>${formatTime(ev.date)} Uhr</span></div>
       <div class="detail-info-item" style="grid-column:1/-1"><label>Ort</label><span>${ev.location}</span></div>
+    </div>
+    <div class="section-padding" style="margin-top:8px">
+      <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--gray-100);border-radius:10px;text-decoration:none">
+        <span style="font-size:15px;line-height:1">🏟️</span>
+        <span style="font-size:13px;font-weight:700;color:var(--navy)">Platzeinteilung Hönggerberg</span>
+      </a>
     </div>
     ${planSection}
     ${isCoach && !editable ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--gray-50,#F1F5F9);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gray-500);display:flex;align-items:center;gap:8px">🔒 Bearbeitbar erst am Trainingstag</div></div>` : ''}
