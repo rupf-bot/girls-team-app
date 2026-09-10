@@ -1323,6 +1323,12 @@
           <a href="https://svhoengg.ch/" target="_blank" rel="noopener" style="display:block;margin:8px auto 0;width:fit-content">
             <img src="SVH-Logo-transparent.png" alt="SV Höngg" style="height:103px;width:auto;display:block">
           </a>
+          <div style="margin-top:8px;display:flex;justify-content:center">
+            <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--gray-100);border-radius:10px;text-decoration:none">
+              <span style="font-size:14px;line-height:1">🏟️</span>
+              <span style="font-size:12px;font-weight:700;color:var(--navy)">Platzeinteilung Hönggerberg</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -3793,7 +3799,6 @@ function renderParentHero(ev, playerId) {
       <div class="parent-hero-date">${formatTime(ev.date)} Uhr · ${ev.location}</div>
       <div class="parent-status-text">${statusText}</div>
       ${actionArea}
-      ${isTrn ? `<div onclick="event.stopPropagation()" style="margin-top:6px"><a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:rgba(255,255,255,0.85);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a></div>` : ''}
       <div class="hero-attendance">
         <div class="hero-attendance-text">${label}</div>
         <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
@@ -4047,7 +4052,8 @@ function renderParentAll() {
   const f = parentEventFilter;
   const upcoming = getUpcomingEvents().filter(ev => f === 'all' || ev.type === f);
   const listLabel = f === 'training' ? 'Alle Trainings' : f === 'tournament' ? 'Alle Turniere' : 'Alle Events';
-  const listHeader = `<div class="section-label">${listLabel}</div>`;
+  const platzLink = f === 'training' ? `<a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--gray-500);text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:normal">🏟️ Platzeinteilung Hönggerberg</a>` : '';
+  const listHeader = `<div class="section-label" style="display:flex;align-items:center;justify-content:space-between;gap:8px">${listLabel}${platzLink}</div>`;
 
   const listHtml = upcoming.map(ev => renderParentEventItemFull(ev, player.id, false)).join('');
   document.getElementById('parent-all-list').innerHTML = listHeader + (listHtml || '<div class="empty-state"><div class="empty-state-icon">📅</div><div class="empty-state-text">Keine kommenden Events</div></div>');
@@ -4104,7 +4110,6 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
         <button class="list-status-btn injured ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>` : ''}
       ${expanded ? `<div onclick="event.stopPropagation()">${renderParentNoteLine(ev.id, playerId, false)}</div>` : ''}
-      ${expanded && isTrn ? `<div onclick="event.stopPropagation()" style="margin-top:6px"><a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung Hönggerberg</a></div>` : ''}
     </div>`;
 }
 
