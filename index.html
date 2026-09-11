@@ -1826,6 +1826,23 @@ function generateTournaments() {
   });
 }
 
+// Turniere, die nachträglich in generateTournaments() ergänzt wurden, in einen bereits
+// bestehenden (serverseitig gespeicherten) Event-Bestand nachtragen. state.events wird nur bei
+// komplett leerem Start neu generiert (siehe loadState()/syncFromServer()) — ohne diesen
+// Abgleich würden neu im Code hinzugefügte Turniere bei bestehenden Teams nie erscheinen.
+// Abgleich erfolgt über das Datum (ISO), da das der stabile Schlüssel je Turnier ist.
+function addMissingTournaments() {
+  const knownDates = new Set(
+    state.events.filter(e => e.type === 'tournament').map(e => new Date(e.date).toISOString())
+  );
+  const missing = generateTournaments().filter(t => !knownDates.has(new Date(t.date).toISOString()));
+  missing.forEach((t, i) => {
+    const newEvent = { ...t, id: Date.now() + i };
+    state.events.push(newEvent);
+    apiPatch({ action: 'upsertEvent', event: newEvent });
+  });
+}
+
 // ── State ──
 let state = {
   currentUser: null,   // { role: 'coach' | 'parent', playerId }
@@ -1870,6 +1887,8 @@ function loadState() {
   if (!state.events.length) {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
+  } else {
+    addMissingTournaments();
   }
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   saveState();
@@ -1958,6 +1977,8 @@ async function syncFromServer(rerender = true) {
       state.events = [...generateTrainings(), ...generateTournaments()];
       initDefaultAttendance();
       apiPatch({ action: 'bootstrapEvents', events: state.events });
+    } else {
+      addMissingTournaments();
     }
     state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
     saveState();
