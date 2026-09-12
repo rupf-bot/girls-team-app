@@ -1887,9 +1887,13 @@ function loadState() {
   if (!state.events.length) {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
-  } else {
-    addMissingTournaments();
   }
+  // addMissingTournaments() bewusst NICHT hier aufrufen: an dieser Stelle basiert state.events
+  // noch auf dem ggf. veralteten localStorage-Cache dieses Geräts, nicht auf dem aktuellen
+  // Serverstand. Lief der Abgleich hier, meldete jedes Gerät mit veraltetem Cache ein bereits
+  // von einem anderen Gerät ergänztes Turnier fälschlich als "fehlend" und legte ein Duplikat an
+  // (siehe Vorfall Männedorf/Witikon/Urdorf, Sep 2026). syncFromServer() erledigt denselben
+  // Abgleich zuverlässig mit dem frischen Serverstand (siehe unten).
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   saveState();
 }
