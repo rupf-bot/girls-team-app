@@ -1198,15 +1198,16 @@
   .squad-counter-num.over { color: var(--red); }
   .squad-player-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     padding: 10px 20px;
     border-bottom: 1px solid var(--gray-100);
   }
   .squad-player-row:last-child { border-bottom: none; }
+  .squad-player-row .avatar, .squad-player-row .squad-btns { margin-top: 2px; }
   .squad-player-info { flex: 1; min-width: 0; }
   .squad-player-name { font-size: 14px; font-weight: 700; color: var(--navy); }
-  .squad-player-meta { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+  .squad-player-meta { font-size: 12px; color: var(--gray-500); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 3px; }
   .benched-badge {
     display: inline-flex;
     align-items: center;
@@ -3026,7 +3027,7 @@ function renderTournamentDetail(ev) {
     const benched = getBenchedCount(p.id);
     const played = getSquadInCount(p.id);
     const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× ausgelassen</span>` : '';
-    const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">🏆 ${played}× aufgeboten</span>`;
+    const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">🏆 ${played}× gespielt</span>`;
     const squadControl = isCoach
       ? `<div class="squad-btns">
         <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
@@ -3039,7 +3040,7 @@ function renderTournamentDetail(ev) {
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${getInitials(p.name)}</div>
       <div class="squad-player-info">
         <div class="squad-player-name">${p.name}</div>
-        <div class="squad-player-meta">${p.parent} · ${playedBadge}${benchedBadge ? ' · ' + benchedBadge : ''}</div>
+        <div class="squad-player-meta"><span>${p.parent}</span>${playedBadge}${benchedBadge}</div>
       </div>
       ${squadControl}
     </div>`;
