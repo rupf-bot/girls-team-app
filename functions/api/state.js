@@ -162,8 +162,10 @@ export async function onRequestPost(context) {
 
   if (action === 'setAttendance' || action === 'setSquad' || action === 'setStaffAttendance') {
     const { eventId, status } = body;
-    const personId = body.playerId ?? body.staffId;
-    if (!isFiniteId(eventId) || !isFiniteId(personId)) {
+    const isStaff = action === 'setStaffAttendance';
+    const personId = isStaff ? body.staffId : body.playerId;
+    const personIdValid = isStaff ? isNonEmptyStringId(personId) : isFiniteId(personId);
+    if (!isFiniteId(eventId) || !personIdValid) {
       return new Response(JSON.stringify({ error: 'eventId/playerId ungültig' }), { status: 400 });
     }
     const prefix = action === 'setAttendance' ? 'att' : action === 'setSquad' ? 'sq' : 'staff';
