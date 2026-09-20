@@ -3026,7 +3026,7 @@ function renderTournamentDetail(ev) {
     const sqSt = getSquadStatus(ev.id, p.id);
     const benched = getBenchedCount(p.id);
     const played = getSquadInCount(p.id);
-    const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× ausgelassen</span>` : '';
+    const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× abgesagt</span>` : '';
     const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">🏆 ${played}× gespielt</span>`;
     const squadControl = isCoach
       ? `<div class="squad-btns">
