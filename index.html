@@ -3042,12 +3042,12 @@ function renderTournamentDetail(ev) {
   const squadCount = getSquadCount(ev.id);
   const counterClass = squadCount > MAX_SQUAD ? 'over' : squadCount === MAX_SQUAD ? 'full' : '';
 
-  // Sort coming players: benched first (priority), then fewer times played, then longest wait, then name
+  // Sort coming players: fewest times played first, then (bei Gleichstand) schon mal nicht berücksichtigt, dann längste Wartezeit
   const comingSorted = [...coming].sort((a, b) => {
-    const benchDiff = getBenchedCount(b.id) - getBenchedCount(a.id);
-    if (benchDiff !== 0) return benchDiff;
     const playedDiff = getSquadInCount(a.id) - getSquadInCount(b.id);
     if (playedDiff !== 0) return playedDiff;
+    const benchDiff = getBenchedCount(b.id) - getBenchedCount(a.id);
+    if (benchDiff !== 0) return benchDiff;
     return getWaitCount(b.id) - getWaitCount(a.id);
   });
 
