@@ -335,12 +335,6 @@
     transition: border-color 0.15s;
   }
   .form-textarea:focus { border-color: var(--brand-blue-mid); background: white; }
-  .plan-block-card {
-    background: var(--gray-150);
-    border-radius: var(--radius-card);
-    padding: 14px 16px;
-    margin-bottom: 10px;
-  }
 
   .btn {
     width: 100%;
@@ -1691,27 +1685,6 @@
     </div>
   </div>
 
-  <!-- TRAINING PLAN MODAL -->
-  <div class="modal-overlay" id="training-plan-modal" onclick="closeTrainingPlanModalOutside(event)">
-    <div class="modal-sheet">
-      <div class="modal-header">
-        <div class="modal-handle"></div>
-        <div class="modal-title">Trainingsplan</div>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Material</label>
-          <input class="form-input" type="text" id="tp-material" placeholder="z. B. Bälle, Leibchen, Minitore">
-        </div>
-        <div id="tp-blocks"></div>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeTrainingPlanModal()">Abbrechen</button>
-          <button class="btn btn-primary" onclick="saveTrainingPlan()" style="margin-top:0">Speichern</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
@@ -1747,13 +1720,6 @@ let STAFF = [
   { id: 's1', name: 'Marcel Rupf',  role: 'Trainer',              phone: '079 245 78 71', hasAttendance: true, photo: 'marcel-portrait.jpg' },
   { id: 's2', name: 'Irwan Burger', role: 'Trainer',              phone: '079 637 08 61', hasAttendance: true },
   { id: 's3', name: 'Kilian Fanger', role: 'Chef Frauenabteilung', phone: '079 382 36 32', hasAttendance: false },
-];
-
-const TRAINING_PLAN_BLOCKS = [
-  { key: 'einleitung', label: 'Einleitung',  defaultDuration: 15 },
-  { key: 'hauptteilA', label: 'Hauptteil A', defaultDuration: 25 },
-  { key: 'hauptteilB', label: 'Hauptteil B', defaultDuration: 20 },
-  { key: 'ausklang',   label: 'Ausklang',    defaultDuration: 5  },
 ];
 
 const DE_DAYS       = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -2948,32 +2914,6 @@ function renderTrainingDetail(ev) {
   const editable = !isFutureDay(ev.date);
   const isPastEv = isPastDay(ev.date);
 
-  const planBlocks   = (ev.plan && ev.plan.blocks) || [];
-  const filledBlocks = planBlocks.filter(b => b.text && b.text.trim());
-  const hasPlan      = filledBlocks.length > 0;
-
-  let planSection = '';
-  if (isCoach || hasPlan) {
-    planSection = `
-    <div class="section-padding" style="margin-top:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="section-title" style="margin-bottom:0">Trainingsplan</div>
-        ${isCoach ? `<button onclick="openTrainingPlan(${ev.id})" style="background:none;border:none;color:var(--brand-blue-mid);font-size:13px;font-weight:700;cursor:pointer;padding:4px 0">${hasPlan ? 'Bearbeiten' : '+ Erstellen'}</button>` : ''}
-      </div>
-      ${hasPlan ? `
-        ${ev.plan.material ? `<div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">📦 ${ev.plan.material}</div>` : ''}
-        ${filledBlocks.map(b => `
-          <div class="plan-block-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-              <div style="font-size:13px;font-weight:800;color:var(--navy)">${b.label}</div>
-              ${b.duration ? `<div style="font-size:12px;font-weight:700;color:var(--gray-500)">${b.duration}'</div>` : ''}
-            </div>
-            <div style="font-size:14px;color:var(--navy);white-space:pre-wrap;line-height:1.4">${b.text}</div>
-          </div>`).join('')}
-      ` : `<div style="font-size:14px;color:var(--gray-500)">Noch kein Trainingsplan erstellt.</div>`}
-    </div>`;
-  }
-
   function playerRow(p, status) {
     const icon = status === 'open' ? '?' : status === 'coming' ? '✓' : status === 'absent' ? '✗' : '🩹';
     const control = (isCoach && editable)
@@ -3010,7 +2950,6 @@ function renderTrainingDetail(ev) {
     <div class="section-padding" style="margin-top:6px">
       <a href="https://www.sportanlagen-app.net/Public/SpielplanWoche?k=3&m=Gr%C3%BCnStadtZ%C3%BCrich&size=1&add=31" target="_blank" rel="noopener" style="font-size:12px;color:var(--gray-500);line-height:1.4;text-decoration:underline;text-underline-offset:2px">🏟️ Platzeinteilung</a>
     </div>
-    ${planSection}
     ${isCoach && !editable ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--gray-50,#F1F5F9);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--gray-500);display:flex;align-items:center;gap:8px">🔒 Bearbeitbar erst am Trainingstag</div></div>` : ''}
     ${isCoach && isPastEv ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-blue-mid);display:flex;align-items:center;gap:8px">✎ Vergangenes Training – nachträgliche Anpassung möglich</div></div>` : ''}
     <div class="attendance-big">
@@ -3624,60 +3563,6 @@ function saveTraining() {
   closeTrainingModal();
   renderCoachEvents();
   showToast('⚽ Training gespeichert!');
-}
-
-function openTrainingPlan(eventId) {
-  const ev = state.events.find(e => e.id === eventId);
-  if (!ev) return;
-  currentDetailEventId = eventId;
-
-  document.getElementById('tp-material').value = (ev.plan && ev.plan.material) || '';
-
-  const blocksHtml = TRAINING_PLAN_BLOCKS.map((def, i) => {
-    const saved = ev.plan && ev.plan.blocks && ev.plan.blocks.find(b => b.key === def.key);
-    const duration = saved ? saved.duration : def.defaultDuration;
-    const text     = saved ? saved.text : '';
-    return `
-    <div class="form-group">
-      <label class="form-label">${def.label}</label>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <input class="form-input" type="number" min="0" id="tp-dur-${i}" value="${duration}" style="width:90px">
-        <span style="font-size:13px;color:var(--gray-500);font-weight:600">Minuten</span>
-      </div>
-      <textarea class="form-textarea" id="tp-text-${i}" placeholder="Übung / Ablauf">${text}</textarea>
-    </div>`;
-  }).join('');
-  document.getElementById('tp-blocks').innerHTML = blocksHtml;
-
-  document.getElementById('training-plan-modal').classList.add('open');
-}
-
-function closeTrainingPlanModal() {
-  document.getElementById('training-plan-modal').classList.remove('open');
-}
-
-function closeTrainingPlanModalOutside(e) {
-  if (e.target.id === 'training-plan-modal') closeTrainingPlanModal();
-}
-
-function saveTrainingPlan() {
-  const ev = state.events.find(e => e.id === currentDetailEventId);
-  if (!ev) return;
-
-  const material = document.getElementById('tp-material').value.trim();
-  const blocks = TRAINING_PLAN_BLOCKS.map((def, i) => ({
-    key: def.key,
-    label: def.label,
-    duration: document.getElementById(`tp-dur-${i}`).value.trim(),
-    text: document.getElementById(`tp-text-${i}`).value.trim(),
-  }));
-
-  ev.plan = { material, blocks };
-  saveState();
-  apiPatch({ action: 'upsertEvent', event: ev });
-  closeTrainingPlanModal();
-  renderTrainingDetail(ev);
-  showToast('⚽ Trainingsplan gespeichert!');
 }
 
 function deleteCurrentEvent() {
