@@ -3041,6 +3041,7 @@ function renderTournamentDetail(ev) {
   const injured = getInjuredPlayers(ev.id);
   const squadCount = getSquadCount(ev.id);
   const counterClass = squadCount > MAX_SQUAD ? 'over' : squadCount === MAX_SQUAD ? 'full' : '';
+  const squadPlayers = PLAYERS.filter(p => getSquadStatus(ev.id, p.id) === 'in');
 
   // Sort coming players: fewest times played first, then (bei Gleichstand) schon mal nicht berücksichtigt, dann längste Wartezeit
   const comingSorted = [...coming].sort((a, b) => {
@@ -3130,6 +3131,16 @@ function renderTournamentDetail(ev) {
     </div>
     ${isCoach && isPastEv ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-blue-mid);display:flex;align-items:center;gap:8px">✎ Vergangenes Turnier – nachträgliche Anpassung möglich</div></div>` : ''}
     ${myStatusSection}
+
+    ${!isCoach && squadPlayers.length ? `
+    <div class="section-padding" style="padding-top:16px">
+      <div class="section-title">Aufgebot · ${squadPlayers.length} Mädchen</div>
+      ${squadPlayers.map(p => `
+        <div class="player-row">
+          <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
+          <div class="player-name">${p.name}${p.id === currentPlayerId ? ' ✓' : ''}</div>
+        </div>`).join('')}
+    </div>` : ''}
 
     ${isCoach ? `
     <div class="squad-header">
