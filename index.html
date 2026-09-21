@@ -2287,6 +2287,29 @@ function getSquadInCount(playerId) {
     getSquadStatus(e.id, playerId) === 'in'
   ).length;
 }
+function getLastPlayedEvent(playerId) {
+  // Most recent past tournament where player was in squad
+  const played = state.events.filter(e =>
+    e.type === 'tournament' && isPast(e.date) &&
+    getSquadStatus(e.id, playerId) === 'in'
+  );
+  if (!played.length) return null;
+  return played.reduce((latest, e) => new Date(e.date) > new Date(latest.date) ? e : latest);
+}
+function getWaitCount(playerId) {
+  // Number of past tournaments since the player's last squad-in (all past tournaments if never played)
+  const pastTournaments = state.events.filter(e => e.type === 'tournament' && isPast(e.date));
+  const lastPlayed = getLastPlayedEvent(playerId);
+  if (!lastPlayed) return pastTournaments.length;
+  return pastTournaments.filter(e => new Date(e.date) > new Date(lastPlayed.date)).length;
+}
+function getWaitLabel(playerId) {
+  const lastPlayed = getLastPlayedEvent(playerId);
+  if (!lastPlayed) return 'noch nie im Aufgebot';
+  const waitCount = getWaitCount(playerId);
+  if (waitCount === 0) return 'zuletzt im Aufgebot';
+  return `wartet seit ${waitCount} Turnier${waitCount === 1 ? '' : 'en'}`;
+}
 
 function getOpenPlayers(eventId) {
   return PLAYERS.filter(p => getStatus(eventId, p.id) === 'open');
@@ -3019,8 +3042,14 @@ function renderTournamentDetail(ev) {
   const squadCount = getSquadCount(ev.id);
   const counterClass = squadCount > MAX_SQUAD ? 'over' : squadCount === MAX_SQUAD ? 'full' : '';
 
-  // Sort coming players: benched first (priority), then by name
-  const comingSorted = [...coming].sort((a, b) => getBenchedCount(b.id) - getBenchedCount(a.id));
+  // Sort coming players: benched first (priority), then fewer times played, then longest wait, then name
+  const comingSorted = [...coming].sort((a, b) => {
+    const benchDiff = getBenchedCount(b.id) - getBenchedCount(a.id);
+    if (benchDiff !== 0) return benchDiff;
+    const playedDiff = getSquadInCount(a.id) - getSquadInCount(b.id);
+    if (playedDiff !== 0) return playedDiff;
+    return getWaitCount(b.id) - getWaitCount(a.id);
+  });
 
   function squadPlayerRow(p) {
     const sqSt = getSquadStatus(ev.id, p.id);
@@ -3028,6 +3057,9 @@ function renderTournamentDetail(ev) {
     const played = getSquadInCount(p.id);
     const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× abgesagt</span>` : '';
     const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">🏆 ${played}× gespielt</span>`;
+    // Wartezeit-Badge nur einblenden, wenn mind. eine weitere Spielerin gleich oft gespielt hat (Gleichstand)
+    const tiedOnPlayed = coming.filter(o => getSquadInCount(o.id) === played).length > 1;
+    const waitBadge = tiedOnPlayed ? `<span class="benched-badge" style="background:#FEF3C7;color:#92400E">⏳ ${getWaitLabel(p.id)}</span>` : '';
     const squadControl = isCoach
       ? `<div class="squad-btns">
         <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
@@ -3040,7 +3072,7 @@ function renderTournamentDetail(ev) {
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${getInitials(p.name)}</div>
       <div class="squad-player-info">
         <div class="squad-player-name">${p.name}</div>
-        <div class="squad-player-meta"><span>${p.parent}</span>${playedBadge}${benchedBadge}</div>
+        <div class="squad-player-meta"><span>${p.parent}</span>${playedBadge}${benchedBadge}${waitBadge}</div>
       </div>
       ${squadControl}
     </div>`;
