@@ -3055,11 +3055,11 @@ function renderTournamentDetail(ev) {
     const sqSt = getSquadStatus(ev.id, p.id);
     const benched = getBenchedCount(p.id);
     const played = getSquadInCount(p.id);
-    const benchedBadge = benched > 0 ? `<span class="benched-badge">⚡ ${benched}× abgesagt</span>` : '';
-    const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">🏆 ${played}× gespielt</span>`;
+    const benchedBadge = benched > 0 ? `<span class="benched-badge">${benched}× abgesagt</span>` : '';
+    const playedBadge = `<span class="benched-badge" style="background:var(--blue-light);color:var(--brand-blue-mid)">${played}× gespielt</span>`;
     // Wartezeit-Badge nur einblenden, wenn mind. eine weitere Spielerin gleich oft gespielt hat (Gleichstand)
     const tiedOnPlayed = coming.filter(o => getSquadInCount(o.id) === played).length > 1;
-    const waitBadge = tiedOnPlayed ? `<span class="benched-badge" style="background:#FEF3C7;color:#92400E">⏳ ${getWaitLabel(p.id)}</span>` : '';
+    const waitBadge = tiedOnPlayed ? `<span class="benched-badge" style="background:#FEF3C7;color:#92400E">${getWaitLabel(p.id)}</span>` : '';
     const squadControl = isCoach
       ? `<div class="squad-btns">
         <button class="squad-btn ${sqSt === 'in' ? 'in' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'in')" title="Im Aufgebot">✓</button>
