@@ -3072,7 +3072,7 @@ function renderTournamentDetail(ev) {
         <button class="squad-btn ${sqSt === 'out' ? 'out' : ''}" onclick="coachSetSquad(${ev.id}, ${p.id}, 'out')" title="Nicht berücksichtigt">✗</button>
         <button class="squad-btn" onclick="coachResetAttendance(${ev.id}, ${p.id})" title="Zurück auf keine Rückmeldung">↺</button>
       </div>`
-      : `<div class="parent-squad-badge ${sqSt === 'in' ? 'in' : sqSt === 'out' ? 'out' : 'pending'}">${sqSt === 'in' ? 'Aufgebot ✓' : sqSt === 'out' ? 'Leider nicht im Aufgebot' : 'Offen'}</div>`;
+      : `<div class="parent-squad-badge ${sqSt === 'in' ? 'in' : sqSt === 'out' ? 'out' : 'pending'}">${sqSt === 'in' ? 'Aufgebot ✓' : sqSt === 'out' ? 'Diesmal nicht im Aufgebot' : 'Offen'}</div>`;
     return `
     <div class="squad-player-row">
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:36px;height:36px;font-size:12px;flex-shrink:0">${getInitials(p.name)}</div>
@@ -4224,7 +4224,7 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
         ${!isTrn && status === 'coming' && isSquadPublished(ev.id) ? (() => {
           const sq = getSquadStatus(ev.id, playerId);
           if (sq === 'in') return `<div class="parent-squad-badge in">Aufgebot ✓</div>`;
-          if (sq === 'out') return `<div class="parent-squad-badge out">Leider nicht im Aufgebot</div>`;
+          if (sq === 'out') return `<div class="parent-squad-badge out">Diesmal nicht im Aufgebot</div>`;
           return `<div class="parent-squad-badge pending">Aufgebot offen</div>`;
         })() : ''}
         ${canToggle ? `<svg class="expand-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg>` : ''}
