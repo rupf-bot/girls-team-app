@@ -14,6 +14,8 @@
 //                                    closedByCoach?, closedByParent?}
 //   sqpub:<eventId>              → 'true', wenn der Coach das Aufgebot aktiv an die Eltern
 //                                   kommuniziert hat (sonst kein Key = noch nicht kommuniziert)
+//   pledit:<playerId>            → JSON Änderungsvorschlag der Eltern, wartet auf Coach-Freigabe
+//                                   {name, phone, number?, ts}
 //
 // Zusätzlich wird unter dem Key "full:state" ein aggregierter Cache des kompletten
 // Zustands gepflegt (JSON von {events,attendance,squad,staffAttendance}). Lese-Zugriffe
@@ -49,7 +51,7 @@ async function listAll(kv, prefix) {
 }
 
 async function buildState(kv) {
-  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys, noteKeys, sqPubKeys] = await Promise.all([
+  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys, noteKeys, sqPubKeys, plEditKeys] = await Promise.all([
     listAll(kv, 'ev:'),
     listAll(kv, 'pl:'),
     listAll(kv, 'sf:'),
@@ -58,6 +60,7 @@ async function buildState(kv) {
     listAll(kv, 'staff:'),
     listAll(kv, 'note:'),
     listAll(kv, 'sqpub:'),
+    listAll(kv, 'pledit:'),
   ]);
 
   const events = (await Promise.all(evKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
@@ -107,7 +110,14 @@ async function buildState(kv) {
     if (val) squadPublished[eventId] = true;
   }));
 
-  return { events, players, staff, attendance, squad, staffAttendance, notes, squadPublished };
+  const playerEdits = {};
+  await Promise.all(plEditKeys.map(async k => {
+    const playerId = k.name.split(':')[1];
+    const edit = await kv.get(k.name, 'json');
+    if (edit) playerEdits[playerId] = edit;
+  }));
+
+  return { events, players, staff, attendance, squad, staffAttendance, notes, squadPublished, playerEdits };
 }
 
 async function rebuildCache(kv) {
@@ -131,6 +141,7 @@ async function getCache(kv) {
     // sofort crashen. Fehlende Felder hier defensiv nachrüsten statt teuren Rebuild zu erzwingen.
     cached.notes = cached.notes || {};
     cached.squadPublished = cached.squadPublished || {};
+    cached.playerEdits = cached.playerEdits || {};
     return cached;
   }
   return rebuildCache(kv);
@@ -212,6 +223,30 @@ export async function onRequestPost(context) {
       await kv.delete(key);
       delete state.squadPublished[eventId];
     }
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'proposePlayerEdit') {
+    const { playerId, edit } = body;
+    if (!isFiniteId(playerId) || !edit || !edit.name) {
+      return new Response(JSON.stringify({ error: 'playerId/edit ungültig' }), { status: 400 });
+    }
+    await kv.put(`pledit:${playerId}`, JSON.stringify(edit));
+    const state = await getCache(kv);
+    state.playerEdits[playerId] = edit;
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'resolvePlayerEdit') {
+    const { playerId } = body;
+    if (!isFiniteId(playerId)) {
+      return new Response(JSON.stringify({ error: 'playerId ungültig' }), { status: 400 });
+    }
+    await kv.delete(`pledit:${playerId}`);
+    const state = await getCache(kv);
+    delete state.playerEdits[playerId];
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }
@@ -374,6 +409,7 @@ export async function onRequestPost(context) {
     const matches = (keys) => keys.filter(k => k.name.split(':')[2] === String(playerId));
     await Promise.all([
       kv.delete(`pl:${playerId}`),
+      kv.delete(`pledit:${playerId}`),
       ...matches(attKeys).map(k => kv.delete(k.name)),
       ...matches(sqKeys).map(k => kv.delete(k.name)),
       ...matches(noteKeys).map(k => kv.delete(k.name)),
@@ -383,6 +419,7 @@ export async function onRequestPost(context) {
     Object.keys(state.attendance).forEach(evId => { delete state.attendance[evId][playerId]; });
     Object.keys(state.squad).forEach(evId => { delete state.squad[evId][playerId]; });
     Object.keys(state.notes).forEach(evId => { if (state.notes[evId]) delete state.notes[evId][playerId]; });
+    delete state.playerEdits[playerId];
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }

@@ -1959,6 +1959,7 @@ async function syncFromServer(rerender = true) {
     state.staffAttendance = data.staffAttendance || {};
     state.notes           = data.notes           || {};
     state.squadPublished  = data.squadPublished  || {};
+    state.playerEdits     = data.playerEdits     || {};
 
     if (data.players && data.players.length) {
       PLAYERS = data.players;
@@ -2019,6 +2020,7 @@ function saveState() {
     staffAttendance: state.staffAttendance,
     notes: state.notes,
     squadPublished: state.squadPublished,
+    playerEdits: state.playerEdits,
   }));
 }
 
@@ -3287,6 +3289,7 @@ function renderPlayers(filter = '') {
         const played = getSquadInCount(p.id);
         const health = refEv ? getStatus(refEv.id, p.id) : 'open';
         const [healthLabel, healthClass] = healthLabels[health] || healthLabels.open;
+        const pending = state.playerEdits[p.id];
         return `
         <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:10px 14px">
           <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
@@ -3296,6 +3299,15 @@ function renderPlayers(filter = '') {
               <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
               ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather.split(' ')[0] + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
             </div>
+            ${pending ? `
+            <div style="margin-top:8px;background:#FEF3C7;border-radius:8px;padding:8px 10px;font-size:12px;color:#92400E">
+              <div style="font-weight:700;margin-bottom:2px">⏳ Änderungsvorschlag der Eltern</div>
+              <div>Name: ${pending.name}${pending.phone ? ` · Tel: ${pending.phone}` : ''}${pending.number ? ` · Nr: ${pending.number}` : ''}</div>
+              <div style="display:flex;gap:8px;margin-top:6px">
+                <button onclick="approvePlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--green-dark);color:white;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✓ Übernehmen</button>
+                <button onclick="rejectPlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--gray-300,#D1D5DB);color:#374151;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✗ Ablehnen</button>
+              </div>
+            </div>` : ''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
             <button onclick="openEditPlayer(${p.id})" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:22px;line-height:1;cursor:pointer;padding:6px;margin:-6px -6px -4px 0">✎</button>
@@ -3895,11 +3907,14 @@ function renderParentTeam(filter = '') {
   );
   document.getElementById('parent-team-players').innerHTML = filtered.map(p => {
     const isMe = p.id === currentPlayerId;
+    const pending = isMe ? state.playerEdits[p.id] : null;
     return `
     <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:${isMe ? 'var(--bordeaux-light)' : 'var(--gray-150)'};border-radius:12px;padding:10px 14px;${isMe ? 'border:1.5px solid var(--bordeaux);' : ''}">
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
       <div style="flex:1;min-width:0">
         <div class="player-name" style="font-size:14px;${isMe ? 'color:var(--bordeaux);font-weight:800;' : ''}">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
+        ${isMe ? `<button onclick="openPlayerEditProposal(${p.id})" style="border:none;background:transparent;color:var(--bordeaux);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;padding:2px 0">✎ Angaben ändern</button>` : ''}
+        ${pending ? `<div style="font-size:11px;color:var(--gray-500);margin-top:2px">⏳ Vorschlag wartet auf Trainer-Freigabe</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
@@ -3917,6 +3932,77 @@ function renderParentTeam(filter = '') {
       </div>
       ${s.phone !== '—' ? `<a class="player-card-phone" href="tel:${s.phone.replace(/\s/g,'')}">${s.phone}</a>` : ''}
     </div>`).join('');
+}
+
+// ============================================================
+// SPIELERIN-ÄNDERUNGSVORSCHLAG (Eltern → Coach-Freigabe)
+// ============================================================
+
+let pepPlayerId = null;
+
+function openPlayerEditProposal(playerId) {
+  const p = PLAYERS.find(x => x.id === playerId);
+  if (!p) return;
+  pepPlayerId = playerId;
+  const pending = state.playerEdits[playerId];
+  document.getElementById('pep-name').value = pending ? pending.name : (p.name || '');
+  document.getElementById('pep-phone').value = pending ? pending.phone : (p.phone || '');
+  document.getElementById('pep-number').value = pending ? (pending.number || '') : (p.number || '');
+  document.getElementById('player-edit-proposal-modal').classList.add('open');
+}
+
+function closePlayerEditProposal() {
+  document.getElementById('player-edit-proposal-modal').classList.remove('open');
+  pepPlayerId = null;
+}
+
+function closePlayerEditProposalOutside(e) {
+  if (e.target.id === 'player-edit-proposal-modal') closePlayerEditProposal();
+}
+
+function submitPlayerEditProposal() {
+  if (!pepPlayerId) return;
+  const name = document.getElementById('pep-name').value.trim();
+  const phone = document.getElementById('pep-phone').value.trim();
+  const numberVal = document.getElementById('pep-number').value.trim();
+  const number = numberVal ? Number(numberVal) : undefined;
+  if (!name) {
+    showToast('Bitte Name eingeben');
+    return;
+  }
+  const edit = { name, phone, ts: Date.now() };
+  if (number) edit.number = number;
+  state.playerEdits[pepPlayerId] = edit;
+  saveState();
+  apiPatch({ action: 'proposePlayerEdit', playerId: pepPlayerId, edit });
+  closePlayerEditProposal();
+  renderParentTeam();
+  showToast('✅ Vorschlag an Trainer gesendet');
+}
+
+function approvePlayerEdit(playerId) {
+  const edit = state.playerEdits[playerId];
+  const idx = PLAYERS.findIndex(p => p.id === playerId);
+  if (!edit || idx === -1) return;
+  const player = { ...PLAYERS[idx], name: edit.name, phone: edit.phone };
+  if (edit.number) player.number = edit.number;
+  PLAYERS[idx] = player;
+  savePlayersLocal();
+  apiPatch({ action: 'upsertPlayer', player });
+  delete state.playerEdits[playerId];
+  saveState();
+  apiPatch({ action: 'resolvePlayerEdit', playerId });
+  refreshChildSelect();
+  renderPlayers(playerFilter);
+  showToast('✅ Änderung übernommen');
+}
+
+function rejectPlayerEdit(playerId) {
+  delete state.playerEdits[playerId];
+  saveState();
+  apiPatch({ action: 'resolvePlayerEdit', playerId });
+  renderPlayers(playerFilter);
+  showToast('Vorschlag abgelehnt');
 }
 
 function parentSetStatus(eventId, playerId, newStatus) {
