@@ -2298,6 +2298,10 @@ function getStaffStatus(eventId, staffId) {
   return ea[staffId];
 }
 
+function getAttendingStaffNames(eventId) {
+  return STAFF.filter(s => s.hasAttendance && getStaffStatus(eventId, s.id) === 'coming').map(s => s.name.split(' ')[0]);
+}
+
 function cycleStaffStatus(eventId, staffId) {
   if (!state.staffAttendance) state.staffAttendance = {};
   if (!state.staffAttendance[eventId]) {
@@ -2329,6 +2333,12 @@ function formatDateShort(dateStr) {
 
 function formatTime(dateStr) {
   const d = parseDate(dateStr);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// Treffpunkt ist immer 1 Std. vor Spielstart.
+function formatMeetingTime(dateStr) {
+  const d = new Date(parseDate(dateStr).getTime() - 60 * 60 * 1000);
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
@@ -3073,6 +3083,7 @@ function renderTournamentDetail(ev) {
     ${!isCoach && squadPlayers.length ? `
     <div class="section-padding" style="padding-top:16px">
       <div class="section-title">Aufgebot · ${squadPlayers.length} Mädchen</div>
+      <div style="background:var(--bordeaux-light);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:var(--bordeaux);font-weight:700">📍 Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}${getAttendingStaffNames(ev.id).length ? `<div style="font-weight:400;margin-top:2px">Trainer: ${getAttendingStaffNames(ev.id).join(', ')}</div>` : ''}</div>
       ${squadPlayers.map(p => `
         <div class="player-row">
           <div class="avatar ${getAvatarClass(p.id - 1)}">${getInitials(p.name)}</div>
@@ -3746,6 +3757,13 @@ function renderParentHero(ev, playerId) {
         <button class="parent-status-btn ${status === 'injured' ? 'active' : ''}" onclick="parentSetStatus(${ev.id}, ${playerId}, 'injured')">🩹 Verletzt</button>
       </div>${renderParentNoteLine(ev.id, playerId, true)}`;
   const calendarLink = !isTrn ? `<a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:white;font-size:12px;font-weight:700;text-decoration:underline">📅 Zum Google Kalender hinzufügen</a>` : '';
+  const squadStatus = !isTrn ? getSquadStatus(ev.id, playerId) : null;
+  const attendingStaff = !isTrn ? getAttendingStaffNames(ev.id) : [];
+  const squadInfo = squadStatus === 'in'
+    ? `<div style="margin-top:8px;background:rgba(255,255,255,0.22);border-radius:8px;padding:10px 12px;font-size:13px;color:white;font-weight:700">✅ Du bist im Aufgebot!<div style="font-weight:400;font-size:12px;margin-top:2px;color:rgba(255,255,255,0.85)">Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}${attendingStaff.length ? ` · Trainer: ${attendingStaff.join(', ')}` : ''}</div></div>`
+    : squadStatus === 'out'
+    ? `<div style="margin-top:8px;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:rgba(255,255,255,0.85)">Diesmal nicht im Aufgebot</div>`
+    : '';
   return `
     <div class="parent-hero-card ${heroClass}">
       <div class="parent-hero-title">${isTrn ? '⚽ Training' : '🏆 ' + (ev.title || 'Turnier')}</div>
@@ -3753,10 +3771,11 @@ function renderParentHero(ev, playerId) {
       <div class="parent-hero-date">${formatTime(ev.date)} Uhr · ${ev.location}</div>
       <div class="parent-status-text">${statusText}</div>
       ${actionArea}
+      ${squadInfo}
       <div class="hero-attendance">
         <div class="hero-attendance-text">${label}</div>
         <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
-        ${!isTrn ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · Mitteilung via WhatsApp</div>` : ''}
+        ${!isTrn && !squadStatus ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · erscheint hier, sobald festgelegt</div>` : ''}
       </div>
       ${calendarLink}
     </div>`;
