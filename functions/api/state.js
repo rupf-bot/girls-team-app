@@ -12,6 +12,8 @@
 //   note:<eventId>:<playerId>    → JSON Verhinderungsgrund-Notiz
 //                                   {text, ts, seen, reply?, replyTs?, replySeenByParent?,
 //                                    closedByCoach?, closedByParent?}
+//   sqpub:<eventId>              → 'true', wenn der Coach das Aufgebot aktiv an die Eltern
+//                                   kommuniziert hat (sonst kein Key = noch nicht kommuniziert)
 //
 // Zusätzlich wird unter dem Key "full:state" ein aggregierter Cache des kompletten
 // Zustands gepflegt (JSON von {events,attendance,squad,staffAttendance}). Lese-Zugriffe
@@ -47,7 +49,7 @@ async function listAll(kv, prefix) {
 }
 
 async function buildState(kv) {
-  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys, noteKeys] = await Promise.all([
+  const [evKeys, plKeys, sfKeys, attKeys, sqKeys, staffKeys, noteKeys, sqPubKeys] = await Promise.all([
     listAll(kv, 'ev:'),
     listAll(kv, 'pl:'),
     listAll(kv, 'sf:'),
@@ -55,6 +57,7 @@ async function buildState(kv) {
     listAll(kv, 'sq:'),
     listAll(kv, 'staff:'),
     listAll(kv, 'note:'),
+    listAll(kv, 'sqpub:'),
   ]);
 
   const events = (await Promise.all(evKeys.map(k => kv.get(k.name, 'json')))).filter(Boolean);
@@ -97,7 +100,14 @@ async function buildState(kv) {
     notes[eventId][playerId] = note;
   }));
 
-  return { events, players, staff, attendance, squad, staffAttendance, notes };
+  const squadPublished = {};
+  await Promise.all(sqPubKeys.map(async k => {
+    const eventId = k.name.split(':')[1];
+    const val = await kv.get(k.name);
+    if (val) squadPublished[eventId] = true;
+  }));
+
+  return { events, players, staff, attendance, squad, staffAttendance, notes, squadPublished };
 }
 
 async function rebuildCache(kv) {
@@ -120,6 +130,7 @@ async function getCache(kv) {
     // geschrieben wurde, fehlt dieses Feld im alten Blob und würde bei state.<feld>[x] = ...
     // sofort crashen. Fehlende Felder hier defensiv nachrüsten statt teuren Rebuild zu erzwingen.
     cached.notes = cached.notes || {};
+    cached.squadPublished = cached.squadPublished || {};
     return cached;
   }
   return rebuildCache(kv);
@@ -182,6 +193,24 @@ export async function onRequestPost(context) {
     } else {
       state[field][eventId] = state[field][eventId] || {};
       state[field][eventId][personId] = String(status);
+    }
+    await putCache(kv, state);
+    return new Response(JSON.stringify({ ok: true }));
+  }
+
+  if (action === 'publishSquad' || action === 'unpublishSquad') {
+    const { eventId } = body;
+    if (!isFiniteId(eventId)) {
+      return new Response(JSON.stringify({ error: 'eventId ungültig' }), { status: 400 });
+    }
+    const key = `sqpub:${eventId}`;
+    const state = await getCache(kv);
+    if (action === 'publishSquad') {
+      await kv.put(key, 'true');
+      state.squadPublished[eventId] = true;
+    } else {
+      await kv.delete(key);
+      delete state.squadPublished[eventId];
     }
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
@@ -302,6 +331,7 @@ export async function onRequestPost(context) {
     ]);
     await Promise.all([
       kv.delete(`ev:${eventId}`),
+      kv.delete(`sqpub:${eventId}`),
       ...attKeys.map(k => kv.delete(k.name)),
       ...sqKeys.map(k => kv.delete(k.name)),
       ...staffKeys.map(k => kv.delete(k.name)),
@@ -313,6 +343,7 @@ export async function onRequestPost(context) {
     delete state.squad[eventId];
     delete state.staffAttendance[eventId];
     delete state.notes[eventId];
+    delete state.squadPublished[eventId];
     await putCache(kv, state);
     return new Response(JSON.stringify({ ok: true }));
   }

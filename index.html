@@ -1685,6 +1685,35 @@
     </div>
   </div>
 
+  <!-- PLAYER EDIT PROPOSAL MODAL (Eltern) -->
+  <div class="modal-overlay" id="player-edit-proposal-modal" onclick="closePlayerEditProposalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Angaben ändern</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Dein Vorschlag geht an den Trainer und wird erst nach Bestätigung übernommen.</div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="pep-name" placeholder="Vorname Nachname">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefonnummer</label>
+          <input class="form-input" type="text" id="pep-phone" placeholder="z. B. 079 123 45 67">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Trikotnummer</label>
+          <input class="form-input" type="number" min="1" max="30" id="pep-number" placeholder="z. B. 7">
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closePlayerEditProposal()">Abbrechen</button>
+          <button class="btn btn-primary" onclick="submitPlayerEditProposal()" style="margin-top:0">Vorschlag senden</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
@@ -1818,6 +1847,8 @@ let state = {
   squad: {},           // { eventId: { playerId: 'in'|'out' } } — tournament only
   staffAttendance: {},
   notes: {},           // { eventId: { playerId: { text, ts, seen, reply, replyTs } } } — Verhinderungsgrund
+  playerEdits: {},      // { playerId: { name, phone, number, ts } } — Änderungsvorschlag der Eltern, wartet auf Coach-Freigabe
+  squadPublished: {},   // { eventId: true } — Aufgebot wurde vom Coach aktiv an die Eltern kommuniziert
 };
 
 function loadState() {
@@ -1832,6 +1863,8 @@ function loadState() {
         state.squad           = parsed.squad            || {};
         state.staffAttendance = parsed.staffAttendance  || {};
         state.notes           = parsed.notes             || {};
+        state.playerEdits     = parsed.playerEdits       || {};
+        state.squadPublished  = parsed.squadPublished    || {};
       }
     }
     const savedPlayers = localStorage.getItem('girlsfc_players');
@@ -1925,6 +1958,7 @@ async function syncFromServer(rerender = true) {
     state.squad           = data.squad           || {};
     state.staffAttendance = data.staffAttendance || {};
     state.notes           = data.notes           || {};
+    state.squadPublished  = data.squadPublished  || {};
 
     if (data.players && data.players.length) {
       PLAYERS = data.players;
@@ -1984,6 +2018,7 @@ function saveState() {
     squad: state.squad,
     staffAttendance: state.staffAttendance,
     notes: state.notes,
+    squadPublished: state.squadPublished,
   }));
 }
 
@@ -2237,6 +2272,25 @@ function setSquadStatus(eventId, playerId, status) {
 function getSquadCount(eventId) {
   if (!state.squad[eventId]) return 0;
   return PLAYERS.filter(p => state.squad[eventId][p.id] === 'in').length;
+}
+function isSquadPublished(eventId) {
+  return !!state.squadPublished[eventId];
+}
+function publishSquad(eventId) {
+  state.squadPublished[eventId] = true;
+  saveState();
+  apiPatch({ action: 'publishSquad', eventId });
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderTournamentDetail(ev);
+  showToast('📣 Aufgebot an Eltern kommuniziert');
+}
+function unpublishSquad(eventId) {
+  delete state.squadPublished[eventId];
+  saveState();
+  apiPatch({ action: 'unpublishSquad', eventId });
+  const ev = state.events.find(e => e.id === eventId);
+  if (ev) renderTournamentDetail(ev);
+  showToast('Kommunikation zurückgezogen');
 }
 function getBenchedCount(playerId) {
   // Past tournaments where player registered (coming) but coach set out
@@ -3051,7 +3105,9 @@ function renderTournamentDetail(ev) {
   const locked = !isCoach && isLockedForParent(ev.date);
   const started = isPast(ev.date);
   const myStatus = !isCoach && currentPlayerId ? getStatus(ev.id, currentPlayerId) : null;
-  const myStatusSection = (!isCoach && currentPlayerId && !squadPlayers.length) ? `
+  const squadPublished = isSquadPublished(ev.id);
+  const showSquadToParent = !isCoach && squadPlayers.length > 0 && squadPublished;
+  const myStatusSection = (!isCoach && currentPlayerId && !showSquadToParent) ? `
     <div class="section-padding" style="padding-top:16px">
       ${locked
         ? `<div style="font-size:13px;color:var(--gray-500);background:var(--gray-100);border-radius:8px;padding:10px 12px">${started ? 'Event hat begonnen — nur Trainer können noch ändern' : 'Anmeldeschluss erreicht — Änderungen waren bis 5 Std. vor Start möglich'}</div>`
@@ -3080,7 +3136,7 @@ function renderTournamentDetail(ev) {
     </div>
     ${isCoach && isPastEv ? `<div class="section-padding" style="margin-top:8px"><div style="background:var(--blue-light);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-blue-mid);display:flex;align-items:center;gap:8px">✎ Vergangenes Turnier – nachträgliche Anpassung möglich</div></div>` : ''}
     ${myStatusSection}
-    ${!isCoach && squadPlayers.length ? `
+    ${showSquadToParent ? `
     <div class="section-padding" style="padding-top:16px">
       <div class="section-title">Aufgebot · ${squadPlayers.length} Mädchen</div>
       <div style="background:var(--bordeaux-light);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:var(--bordeaux);font-weight:700">📍 Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}${getAttendingStaffNames(ev.id).length ? `<div style="font-weight:400;margin-top:2px">Trainer: ${getAttendingStaffNames(ev.id).join(', ')}</div>` : ''}</div>
@@ -3102,6 +3158,17 @@ function renderTournamentDetail(ev) {
         <div style="font-size:20px;font-weight:800;color:var(--navy)">${coming.length}</div>
       </div>
     </div>
+
+    ${squadCount > 0 ? `
+    <div class="section-padding" style="padding-top:0;padding-bottom:12px">
+      ${squadPublished
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--green-light);border-radius:10px;padding:10px 14px">
+            <span style="font-size:13px;font-weight:700;color:var(--green-dark)">✓ Aufgebot an Eltern kommuniziert</span>
+            <button onclick="unpublishSquad(${ev.id})" style="background:none;border:none;color:var(--green-dark);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap">Zurückziehen</button>
+          </div>`
+        : `<button onclick="publishSquad(${ev.id})" style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--bordeaux);color:white;font-weight:700;font-size:14px;cursor:pointer">📣 Aufgebot an Eltern kommunizieren</button>`
+      }
+    </div>` : ''}
 
     ${coming.length ? `
       <div class="squad-section">
@@ -3759,10 +3826,10 @@ function renderParentHero(ev, playerId) {
   const calendarLink = !isTrn ? `<a href="${googleCalendarLink(ev)}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:white;font-size:12px;font-weight:700;text-decoration:underline">📅 Zum Google Kalender hinzufügen</a>` : '';
   const squadStatus = !isTrn ? getSquadStatus(ev.id, playerId) : null;
   const attendingStaff = !isTrn ? getAttendingStaffNames(ev.id) : [];
-  const squadInfo = squadStatus === 'in'
-    ? `<div style="margin-top:8px;background:rgba(255,255,255,0.22);border-radius:8px;padding:10px 12px;font-size:13px;color:white;font-weight:700">✅ Du bist im Aufgebot!<div style="font-weight:400;font-size:12px;margin-top:2px;color:rgba(255,255,255,0.85)">Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}${attendingStaff.length ? ` · Trainer: ${attendingStaff.join(', ')}` : ''}</div></div>`
-    : squadStatus === 'out'
-    ? `<div style="margin-top:8px;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:rgba(255,255,255,0.85)">Diesmal nicht im Aufgebot</div>`
+  const squadCount = !isTrn && isSquadPublished(ev.id) ? getSquadCount(ev.id) : 0;
+  const squadNames = squadCount ? PLAYERS.filter(p => getSquadStatus(ev.id, p.id) === 'in').map(p => p.name.split(' ')[0]) : [];
+  const squadInfo = squadCount
+    ? `<div style="margin-top:8px;background:rgba(255,255,255,0.22);border-radius:8px;padding:10px 12px;font-size:13px;color:white;font-weight:700">📋 Aufgebot (${squadCount})<div style="font-weight:400;font-size:12px;margin-top:2px;color:rgba(255,255,255,0.85)">${squadNames.join(', ')}</div><div style="font-weight:400;font-size:12px;margin-top:6px;color:rgba(255,255,255,0.85)">📍 Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}${attendingStaff.length ? ` · Trainer: ${attendingStaff.join(', ')}` : ''}</div></div>${squadStatus === 'out' ? `<div style="margin-top:8px;background:rgba(0,0,0,0.15);border-radius:8px;padding:10px 12px;font-size:13px;color:rgba(255,255,255,0.85)">Diesmal nicht im Aufgebot</div>` : ''}`
     : '';
   return `
     <div class="parent-hero-card ${heroClass}">
@@ -3775,7 +3842,7 @@ function renderParentHero(ev, playerId) {
       <div class="hero-attendance">
         <div class="hero-attendance-text">${label}</div>
         <div class="hero-attendance-bar"><div class="hero-attendance-fill" style="width:${pct}%"></div></div>
-        ${!isTrn && !squadStatus ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · erscheint hier, sobald festgelegt</div>` : ''}
+        ${!isTrn && !squadCount ? `<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:6px">Coach wählt bis zu 10 fürs Aufgebot · erscheint hier, sobald festgelegt</div>` : ''}
       </div>
       ${calendarLink}
     </div>`;
