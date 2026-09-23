@@ -4221,7 +4221,7 @@ function renderParentEventItemFull(ev, playerId, pastEv) {
       </div>
       <div class="parent-event-right">
         <div class="status-badge ${badgeClass}">${badgeLabel}</div>
-        ${!isTrn && status === 'coming' ? (() => {
+        ${!isTrn && status === 'coming' && isSquadPublished(ev.id) ? (() => {
           const sq = getSquadStatus(ev.id, playerId);
           if (sq === 'in') return `<div class="parent-squad-badge in">Aufgebot ✓</div>`;
           if (sq === 'out') return `<div class="parent-squad-badge out">Nicht dabei</div>`;
