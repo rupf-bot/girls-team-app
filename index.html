@@ -1731,16 +1731,17 @@
     <div class="modal-sheet">
       <div class="modal-header">
         <div class="modal-handle"></div>
-        <div class="modal-title">Aufgebot per WhatsApp teilen</div>
+        <div class="modal-title">Aufgebot kommunizieren</div>
       </div>
       <div class="modal-body">
-        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Text ist bereits an die Eltern kommuniziert. Du kannst ihn zusätzlich per WhatsApp verschicken (z. B. an die Team-Gruppe).</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Dieser Text erscheint bei den Eltern in der App unter "Deine Meldungen". Du kannst ihn hier anpassen und erneut senden — auch wenn das Aufgebot heute bereits kommuniziert wurde. Zusätzlich per WhatsApp verschicken (z. B. an die Team-Gruppe) oder kopieren.</div>
         <div class="form-group">
           <textarea class="form-input" id="squad-share-text" rows="8" style="resize:vertical;font-family:inherit"></textarea>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="copySquadShareText()">📋 Kopieren</button>
-          <button class="btn btn-primary" onclick="openSquadShareWhatsApp()" style="margin-top:0">📲 In WhatsApp öffnen</button>
+          <button class="btn btn-primary" onclick="sendSquadMessageFromModal()">📣 Senden</button>
+          <button class="btn btn-secondary" onclick="copySquadShareText()" style="margin-top:0">📋 Kopieren</button>
+          <button class="btn btn-secondary" onclick="openSquadShareWhatsApp()" style="margin-top:0">📲 In WhatsApp öffnen</button>
         </div>
       </div>
     </div>
@@ -1881,6 +1882,8 @@ let state = {
   notes: {},           // { eventId: { playerId: { text, ts, seen, reply, replyTs } } } — Verhinderungsgrund
   playerEdits: {},      // { playerId: { name, phone, number, ts } } — Änderungsvorschlag der Eltern, wartet auf Coach-Freigabe
   squadPublished: {},   // { eventId: true } — Aufgebot wurde vom Coach aktiv an die Eltern kommuniziert
+  squadMessages: {},    // { eventId: { text, ts } } — der editierbare Aufgebot-Text, erscheint bei Eltern unter "Deine Meldungen"
+  squadMsgAck: {},       // { eventId: { playerId: { seen, closed } } } — pro Elternteil gesehen/ausgeblendet
 };
 
 function loadState() {
@@ -1897,6 +1900,8 @@ function loadState() {
         state.notes           = parsed.notes             || {};
         state.playerEdits     = parsed.playerEdits       || {};
         state.squadPublished  = parsed.squadPublished    || {};
+        state.squadMessages   = parsed.squadMessages     || {};
+        state.squadMsgAck     = parsed.squadMsgAck       || {};
       }
     }
     const savedPlayers = localStorage.getItem('girlsfc_players');
@@ -1991,6 +1996,8 @@ async function syncFromServer(rerender = true) {
     state.staffAttendance = data.staffAttendance || {};
     state.notes           = data.notes           || {};
     state.squadPublished  = data.squadPublished  || {};
+    state.squadMessages   = data.squadMessages   || {};
+    state.squadMsgAck     = data.squadMsgAck     || {};
     state.playerEdits     = data.playerEdits     || {};
 
     if (data.players && data.players.length) {
@@ -2321,11 +2328,50 @@ function publishSquad(eventId) {
 }
 function unpublishSquad(eventId) {
   delete state.squadPublished[eventId];
+  delete state.squadMessages[eventId];
+  delete state.squadMsgAck[eventId];
   saveState();
   apiPatch({ action: 'unpublishSquad', eventId });
   const ev = state.events.find(e => e.id === eventId);
   if (ev) renderTournamentDetail(ev);
   showToast('Kommunikation zurückgezogen');
+}
+
+// ── Aufgebot-Mitteilung an Eltern (erscheint unter "Deine Meldungen") ──
+function persistSquadMessage(eventId, text, opts = {}) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) return;
+  state.squadMessages[eventId] = { text: trimmed, ts: Date.now() };
+  state.squadMsgAck[eventId] = {}; // Text ist neu/geändert → für alle Eltern wieder als ungelesen
+  saveState();
+  apiPatch({ action: 'setSquadMessage', eventId, text: trimmed });
+  if (!opts.silent) showToast('📣 Mitteilung an Eltern gesendet');
+}
+function sendSquadMessageFromModal() {
+  const modal = document.getElementById('squad-share-modal');
+  const eventId = Number(modal.dataset.eventId);
+  const text = document.getElementById('squad-share-text').value;
+  if (!text.trim()) { showToast('Text darf nicht leer sein'); return; }
+  persistSquadMessage(eventId, text);
+}
+function getSquadMsgAck(eventId, playerId) {
+  return (state.squadMsgAck[eventId] && state.squadMsgAck[eventId][playerId]) || null;
+}
+function ackSquadMessage(eventId, playerId) {
+  const ack = getSquadMsgAck(eventId, playerId);
+  if (ack && ack.seen) return;
+  state.squadMsgAck[eventId] = state.squadMsgAck[eventId] || {};
+  state.squadMsgAck[eventId][playerId] = { seen: true, closed: false };
+  saveState();
+  apiPatch({ action: 'ackSquadMessage', eventId, playerId });
+  renderParentNotes();
+}
+function closeSquadMessageEntry(eventId, playerId) {
+  state.squadMsgAck[eventId] = state.squadMsgAck[eventId] || {};
+  state.squadMsgAck[eventId][playerId] = { seen: true, closed: true };
+  saveState();
+  apiPatch({ action: 'closeSquadMessage', eventId, playerId });
+  renderParentNotes();
 }
 
 // ── Squad-Aufgebot per WhatsApp teilen ──
@@ -2343,10 +2389,12 @@ function buildSquadShareText(eventId) {
   return lines.join('\n');
 }
 function openSquadShareModal(eventId) {
-  const text = buildSquadShareText(eventId);
+  const existing = state.squadMessages[eventId];
+  const text = existing ? existing.text : buildSquadShareText(eventId);
   document.getElementById('squad-share-text').value = text;
   document.getElementById('squad-share-modal').dataset.eventId = eventId;
   document.getElementById('squad-share-modal').classList.add('open');
+  if (!existing) persistSquadMessage(eventId, text, { silent: true });
 }
 function closeSquadShareModal() {
   document.getElementById('squad-share-modal').classList.remove('open');
@@ -2846,14 +2894,39 @@ function renderParentNotes() {
   const entries = [];
   Object.keys(state.notes).forEach(evId => {
     const note = state.notes[evId] && state.notes[evId][player.id];
-    if (note && note.text && !note.closedByParent) entries.push({ eventId: Number(evId), note });
+    if (note && note.text && !note.closedByParent) entries.push({ kind: 'note', eventId: Number(evId), ts: note.ts, note });
+  });
+  Object.keys(state.squadMessages).forEach(evId => {
+    const eventId = Number(evId);
+    if (!isSquadPublished(eventId)) return;
+    const msg = state.squadMessages[evId];
+    if (!msg) return;
+    const ack = getSquadMsgAck(eventId, player.id);
+    if (ack && ack.closed) return;
+    entries.push({ kind: 'squad', eventId, ts: msg.ts, msg, ack });
   });
   if (!entries.length) { wrap.innerHTML = ''; return; }
-  entries.sort((a, b) => b.note.ts - a.note.ts);
-  const unseenCount = entries.filter(e => e.note.reply && !e.note.replySeenByParent).length;
-  const rows = entries.slice(0, 8).map(({ eventId, note }) => {
+  entries.sort((a, b) => b.ts - a.ts);
+  const unseenCount = entries.filter(e =>
+    e.kind === 'note' ? (e.note.reply && !e.note.replySeenByParent) : (!e.ack || !e.ack.seen)
+  ).length;
+  const rows = entries.slice(0, 8).map(entry => {
+    const { eventId } = entry;
     const ev = state.events.find(e => e.id === eventId);
     const evLabel = ev ? `${ev.type === 'training' ? '⚽' : '🏆'} ${formatDateShort(ev.date)}` : '';
+    if (entry.kind === 'squad') {
+      const unseen = !entry.ack || !entry.ack.seen;
+      return `
+      <div onclick="ackSquadMessage(${eventId}, ${player.id})" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:${unseen ? 'var(--red-light)' : 'var(--gray-150)'};border-radius:12px;margin-bottom:8px;cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--navy)">🏆 ${evLabel} · Aufgebot</div>
+          <div style="font-size:13px;color:var(--navy);margin-top:2px;white-space:pre-line">${entry.msg.text}</div>
+        </div>
+        ${unseen ? `<div style="width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>` : ''}
+        <div onclick="event.stopPropagation();closeSquadMessageEntry(${eventId}, ${player.id})" title="Ausblenden" style="flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:15px;cursor:pointer">✕</div>
+      </div>`;
+    }
+    const note = entry.note;
     const unseen = note.reply && !note.replySeenByParent;
     return `
     <div onclick="openNoteModal(${eventId}, ${player.id}, 'parent')" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:${unseen ? 'var(--red-light)' : 'var(--gray-150)'};border-radius:12px;margin-bottom:8px;cursor:pointer">
