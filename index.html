@@ -2903,7 +2903,9 @@ function renderParentNotes() {
     if (!msg) return;
     const ack = getSquadMsgAck(eventId, player.id);
     if (ack && ack.closed) return;
-    entries.push({ kind: 'squad', eventId, ts: msg.ts, msg, ack });
+    const notSelected = getStatus(eventId, player.id) === 'coming' && getSquadStatus(eventId, player.id) === 'out';
+    const text = notSelected ? 'Leider konnten wir dich für dieses Turnier nicht aufbieten.' : msg.text;
+    entries.push({ kind: 'squad', eventId, ts: msg.ts, msg: { text }, ack, rejected: notSelected });
   });
   if (!entries.length) { wrap.innerHTML = ''; return; }
   entries.sort((a, b) => b.ts - a.ts);
@@ -2919,7 +2921,7 @@ function renderParentNotes() {
       return `
       <div onclick="ackSquadMessage(${eventId}, ${player.id})" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:${unseen ? 'var(--red-light)' : 'var(--gray-150)'};border-radius:12px;margin-bottom:8px;cursor:pointer">
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--navy)">🏆 ${evLabel} · Aufgebot</div>
+          <div style="font-size:13px;font-weight:700;color:var(--navy)">${entry.rejected ? '🔸' : '🏆'} ${evLabel} · ${entry.rejected ? 'Nicht aufgeboten' : 'Aufgebot'}</div>
           <div style="font-size:13px;color:var(--navy);margin-top:2px;white-space:pre-line">${entry.msg.text}</div>
         </div>
         ${unseen ? `<div style="width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>` : ''}
