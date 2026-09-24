@@ -2375,10 +2375,24 @@ function closeSquadMessageEntry(eventId, playerId) {
 }
 
 // ── Squad-Aufgebot per WhatsApp teilen ──
+function buildFirstNameList(players) {
+  const firstNameCounts = {};
+  players.forEach(p => {
+    const first = p.name.split(' ')[0];
+    firstNameCounts[first] = (firstNameCounts[first] || 0) + 1;
+  });
+  return players.map(p => {
+    const parts = p.name.split(' ');
+    const first = parts[0];
+    if (firstNameCounts[first] > 1) return `${first} ${parts.slice(1).join(' ')}`;
+    return first;
+  });
+}
 function buildSquadShareText(eventId) {
   const ev = state.events.find(e => e.id === eventId);
   if (!ev) return '';
-  const squadNames = PLAYERS.filter(p => getSquadStatus(eventId, p.id) === 'in').map(p => p.name);
+  const squadPlayers = PLAYERS.filter(p => getSquadStatus(eventId, p.id) === 'in');
+  const squadNames = buildFirstNameList(squadPlayers);
   const staff = getAttendingStaffNames(eventId);
   const lines = [
     `🏆 Aufgebot ${ev.title || 'Turnier'} – ${formatDateLong(ev.date)}`,
