@@ -1608,7 +1608,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Telefon Mutter</label>
-          <input class="form-input" type="text" id="pl-mother-phone" placeholder="optional">
+          <input class="form-input" type="text" id="pl-mother-phone" placeholder="z. B. 079 123 45 67">
         </div>
         <div class="form-group">
           <label class="form-label">Name Vater</label>
@@ -1616,7 +1616,7 @@
         </div>
         <div class="form-group">
           <label class="form-label">Telefon Vater</label>
-          <input class="form-input" type="text" id="pl-father-phone" placeholder="optional">
+          <input class="form-input" type="text" id="pl-father-phone" placeholder="z. B. 079 123 45 67">
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" onclick="closePlayerModal()">Abbrechen</button>
@@ -1699,12 +1699,24 @@
           <input class="form-input" type="text" id="pep-name" placeholder="Vorname Nachname">
         </div>
         <div class="form-group">
-          <label class="form-label">Telefonnummer</label>
-          <input class="form-input" type="text" id="pep-phone" placeholder="z. B. 079 123 45 67">
-        </div>
-        <div class="form-group">
           <label class="form-label">Trikotnummer</label>
           <input class="form-input" type="number" min="1" max="30" id="pep-number" placeholder="z. B. 7">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name Mutter</label>
+          <input class="form-input" type="text" id="pep-mother-name" placeholder="optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon Mutter</label>
+          <input class="form-input" type="text" id="pep-mother-phone" placeholder="z. B. 079 123 45 67">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name Vater</label>
+          <input class="form-input" type="text" id="pep-father-name" placeholder="optional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefon Vater</label>
+          <input class="form-input" type="text" id="pep-father-phone" placeholder="z. B. 079 123 45 67">
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" onclick="closePlayerEditProposal()">Abbrechen</button>
@@ -3302,7 +3314,9 @@ function renderPlayers(filter = '') {
             ${pending ? `
             <div style="margin-top:8px;background:#FEF3C7;border-radius:8px;padding:8px 10px;font-size:12px;color:#92400E">
               <div style="font-weight:700;margin-bottom:2px">⏳ Änderungsvorschlag der Eltern</div>
-              <div>Name: ${pending.name}${pending.phone ? ` · Tel: ${pending.phone}` : ''}${pending.number ? ` · Nr: ${pending.number}` : ''}</div>
+              <div>Name: ${pending.name}${pending.number ? ` · Nr: ${pending.number}` : ''}</div>
+              ${pending.nameMother || pending.phone ? `<div>Mutter: ${pending.nameMother || '–'}${pending.phone ? ` · ${pending.phone}` : ''}</div>` : ''}
+              ${pending.nameFather || pending.phone2 ? `<div>Vater: ${pending.nameFather || '–'}${pending.phone2 ? ` · ${pending.phone2}` : ''}</div>` : ''}
               <div style="display:flex;gap:8px;margin-top:6px">
                 <button onclick="approvePlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--green-dark);color:white;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✓ Übernehmen</button>
                 <button onclick="rejectPlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--gray-300,#D1D5DB);color:#374151;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✗ Ablehnen</button>
@@ -3946,8 +3960,11 @@ function openPlayerEditProposal(playerId) {
   pepPlayerId = playerId;
   const pending = state.playerEdits[playerId];
   document.getElementById('pep-name').value = pending ? pending.name : (p.name || '');
-  document.getElementById('pep-phone').value = pending ? pending.phone : (p.phone || '');
   document.getElementById('pep-number').value = pending ? (pending.number || '') : (p.number || '');
+  document.getElementById('pep-mother-name').value = pending ? (pending.nameMother || '') : (p.nameMother || '');
+  document.getElementById('pep-mother-phone').value = pending ? (pending.phone || '') : (p.phone || '');
+  document.getElementById('pep-father-name').value = pending ? (pending.nameFather || '') : (p.nameFather || '');
+  document.getElementById('pep-father-phone').value = pending ? (pending.phone2 || '') : (p.phone2 || '');
   document.getElementById('player-edit-proposal-modal').classList.add('open');
 }
 
@@ -3963,15 +3980,21 @@ function closePlayerEditProposalOutside(e) {
 function submitPlayerEditProposal() {
   if (!pepPlayerId) return;
   const name = document.getElementById('pep-name').value.trim();
-  const phone = document.getElementById('pep-phone').value.trim();
   const numberVal = document.getElementById('pep-number').value.trim();
   const number = numberVal ? Number(numberVal) : undefined;
+  const nameMother = document.getElementById('pep-mother-name').value.trim();
+  const phone = document.getElementById('pep-mother-phone').value.trim();
+  const nameFather = document.getElementById('pep-father-name').value.trim();
+  const phone2 = document.getElementById('pep-father-phone').value.trim();
   if (!name) {
     showToast('Bitte Name eingeben');
     return;
   }
   const edit = { name, phone, ts: Date.now() };
   if (number) edit.number = number;
+  if (nameMother) edit.nameMother = nameMother;
+  if (nameFather) edit.nameFather = nameFather;
+  if (phone2) edit.phone2 = phone2;
   state.playerEdits[pepPlayerId] = edit;
   saveState();
   apiPatch({ action: 'proposePlayerEdit', playerId: pepPlayerId, edit });
@@ -3986,6 +4009,9 @@ function approvePlayerEdit(playerId) {
   if (!edit || idx === -1) return;
   const player = { ...PLAYERS[idx], name: edit.name, phone: edit.phone };
   if (edit.number) player.number = edit.number;
+  if (edit.nameMother) player.nameMother = edit.nameMother;
+  if (edit.nameFather) player.nameFather = edit.nameFather;
+  if (edit.phone2) player.phone2 = edit.phone2;
   PLAYERS[idx] = player;
   savePlayersLocal();
   apiPatch({ action: 'upsertPlayer', player });
