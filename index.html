@@ -1726,6 +1726,26 @@
     </div>
   </div>
 
+  <!-- SQUAD SHARE MODAL (Coach) -->
+  <div class="modal-overlay" id="squad-share-modal" onclick="closeSquadShareModalOutside(event)">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Aufgebot per WhatsApp teilen</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Text ist bereits an die Eltern kommuniziert. Du kannst ihn zusätzlich per WhatsApp verschicken (z. B. an die Team-Gruppe).</div>
+        <div class="form-group">
+          <textarea class="form-input" id="squad-share-text" rows="8" readonly style="resize:vertical;font-family:inherit"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="copySquadShareText()">📋 Kopieren</button>
+          <button class="btn btn-primary" onclick="openSquadShareWhatsApp()" style="margin-top:0">📲 In WhatsApp öffnen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
@@ -2297,6 +2317,7 @@ function publishSquad(eventId) {
   const ev = state.events.find(e => e.id === eventId);
   if (ev) renderTournamentDetail(ev);
   showToast('📣 Aufgebot an Eltern kommuniziert');
+  if (ev) openSquadShareModal(eventId);
 }
 function unpublishSquad(eventId) {
   delete state.squadPublished[eventId];
@@ -2305,6 +2326,45 @@ function unpublishSquad(eventId) {
   const ev = state.events.find(e => e.id === eventId);
   if (ev) renderTournamentDetail(ev);
   showToast('Kommunikation zurückgezogen');
+}
+
+// ── Squad-Aufgebot per WhatsApp teilen ──
+function buildSquadShareText(eventId) {
+  const ev = state.events.find(e => e.id === eventId);
+  if (!ev) return '';
+  const squadNames = PLAYERS.filter(p => getSquadStatus(eventId, p.id) === 'in').map(p => p.name);
+  const staff = getAttendingStaffNames(eventId);
+  const lines = [
+    `🏆 Aufgebot ${ev.title || 'Turnier'} – ${formatDateLong(ev.date)}`,
+    `📍 Treffpunkt ${formatMeetingTime(ev.date)} Uhr (1 Std. vor Spielstart) · ${ev.location}`,
+  ];
+  if (staff.length) lines.push(`Trainer: ${staff.join(', ')}`);
+  lines.push('', `Dabei (${squadNames.length}):`, squadNames.join(', '));
+  return lines.join('\n');
+}
+function openSquadShareModal(eventId) {
+  const text = buildSquadShareText(eventId);
+  document.getElementById('squad-share-text').value = text;
+  document.getElementById('squad-share-modal').dataset.eventId = eventId;
+  document.getElementById('squad-share-modal').classList.add('open');
+}
+function closeSquadShareModal() {
+  document.getElementById('squad-share-modal').classList.remove('open');
+}
+function closeSquadShareModalOutside(e) {
+  if (e.target.id === 'squad-share-modal') closeSquadShareModal();
+}
+function copySquadShareText() {
+  const text = document.getElementById('squad-share-text').value;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✅ Text kopiert');
+  }).catch(() => {
+    showToast('Kopieren fehlgeschlagen — Text manuell markieren');
+  });
+}
+function openSquadShareWhatsApp() {
+  const text = document.getElementById('squad-share-text').value;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 function getBenchedCount(playerId) {
   // Past tournaments where player registered (coming) but coach set out
@@ -3176,9 +3236,12 @@ function renderTournamentDetail(ev) {
     ${squadCount > 0 ? `
     <div class="section-padding" style="padding-top:0;padding-bottom:12px">
       ${squadPublished
-        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--green-light);border-radius:10px;padding:10px 14px">
+        ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--green-light);border-radius:10px;padding:10px 14px;flex-wrap:wrap">
             <span style="font-size:13px;font-weight:700;color:var(--green-dark)">✓ Aufgebot an Eltern kommuniziert</span>
-            <button onclick="unpublishSquad(${ev.id})" style="background:none;border:none;color:var(--green-dark);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap">Zurückziehen</button>
+            <div style="display:flex;gap:12px">
+              <button onclick="openSquadShareModal(${ev.id})" style="background:none;border:none;color:var(--green-dark);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap">📲 WhatsApp</button>
+              <button onclick="unpublishSquad(${ev.id})" style="background:none;border:none;color:var(--green-dark);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;white-space:nowrap">Zurückziehen</button>
+            </div>
           </div>`
         : `<button onclick="publishSquad(${ev.id})" style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--bordeaux);color:white;font-weight:700;font-size:14px;cursor:pointer">📣 Aufgebot an Eltern kommunizieren</button>`
       }
