@@ -4155,7 +4155,7 @@ function submitPlayerEditProposal() {
   showToast('✅ Vorschlag an Trainer gesendet');
 }
 
-function approvePlayerEdit(playerId) {
+async function approvePlayerEdit(playerId) {
   const edit = state.playerEdits[playerId];
   const idx = PLAYERS.findIndex(p => p.id === playerId);
   if (!edit || idx === -1) return;
@@ -4166,7 +4166,11 @@ function approvePlayerEdit(playerId) {
   if (edit.phone2) player.phone2 = edit.phone2;
   PLAYERS[idx] = player;
   savePlayersLocal();
-  apiPatch({ action: 'upsertPlayer', player });
+  // Warten bis der Spieler-Update sicher im Server-Cache gespeichert ist, bevor die
+  // Anfrage gelöscht wird — sonst können beide Requests denselben Cache-Stand lesen
+  // und der zweite (resolvePlayerEdit) überschreibt den ersten, wodurch die neue
+  // Adresse verloren geht, obwohl die Anfrage als erledigt markiert wurde.
+  await apiPatch({ action: 'upsertPlayer', player });
   delete state.playerEdits[playerId];
   saveState();
   apiPatch({ action: 'resolvePlayerEdit', playerId });
