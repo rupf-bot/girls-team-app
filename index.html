@@ -1693,7 +1693,7 @@
         <div class="modal-title">Angaben ändern</div>
       </div>
       <div class="modal-body">
-        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Dein Vorschlag geht an den Trainer und wird erst nach Bestätigung übernommen.</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;line-height:1.4">Deine Änderungen werden direkt gespeichert.</div>
         <div class="form-group">
           <label class="form-label">Name</label>
           <input class="form-input" type="text" id="pep-name" placeholder="Vorname Nachname">
@@ -1720,7 +1720,7 @@
         </div>
         <div class="modal-actions">
           <button class="btn btn-secondary" onclick="closePlayerEditProposal()">Abbrechen</button>
-          <button class="btn btn-primary" onclick="submitPlayerEditProposal()" style="margin-top:0">Vorschlag senden</button>
+          <button class="btn btn-primary" onclick="submitPlayerEditProposal()" style="margin-top:0">Speichern</button>
         </div>
       </div>
     </div>
@@ -1880,7 +1880,6 @@ let state = {
   squad: {},           // { eventId: { playerId: 'in'|'out' } } — tournament only
   staffAttendance: {},
   notes: {},           // { eventId: { playerId: { text, ts, seen, reply, replyTs } } } — Verhinderungsgrund
-  playerEdits: {},      // { playerId: { name, phone, number, ts } } — Änderungsvorschlag der Eltern, wartet auf Coach-Freigabe
   squadPublished: {},   // { eventId: true } — Aufgebot wurde vom Coach aktiv an die Eltern kommuniziert
   squadMessages: {},    // { eventId: { text, ts } } — der editierbare Aufgebot-Text, erscheint bei Eltern unter "Deine Meldungen"
   squadMsgAck: {},       // { eventId: { playerId: { seen, closed } } } — pro Elternteil gesehen/ausgeblendet
@@ -1898,7 +1897,6 @@ function loadState() {
         state.squad           = parsed.squad            || {};
         state.staffAttendance = parsed.staffAttendance  || {};
         state.notes           = parsed.notes             || {};
-        state.playerEdits     = parsed.playerEdits       || {};
         state.squadPublished  = parsed.squadPublished    || {};
         state.squadMessages   = parsed.squadMessages     || {};
         state.squadMsgAck     = parsed.squadMsgAck       || {};
@@ -1998,7 +1996,6 @@ async function syncFromServer(rerender = true) {
     state.squadPublished  = data.squadPublished  || {};
     state.squadMessages   = data.squadMessages   || {};
     state.squadMsgAck     = data.squadMsgAck     || {};
-    state.playerEdits     = data.playerEdits     || {};
 
     if (data.players && data.players.length) {
       PLAYERS = data.players;
@@ -2059,7 +2056,6 @@ function saveState() {
     staffAttendance: state.staffAttendance,
     notes: state.notes,
     squadPublished: state.squadPublished,
-    playerEdits: state.playerEdits,
   }));
 }
 
@@ -3453,7 +3449,6 @@ function renderPlayers(filter = '') {
         const played = getSquadInCount(p.id);
         const health = refEv ? getStatus(refEv.id, p.id) : 'open';
         const [healthLabel, healthClass] = healthLabels[health] || healthLabels.open;
-        const pending = state.playerEdits[p.id];
         return `
         <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:var(--gray-150);border-radius:12px;padding:10px 14px">
           <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
@@ -3463,17 +3458,6 @@ function renderPlayers(filter = '') {
               <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}" style="display:inline-block">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
               ${p.phone2 ? `<a class="player-card-phone" href="tel:${p.phone2.replace(/\s/g,'')}" style="display:inline-block">${p.nameFather ? p.nameFather.split(' ')[0] + ' · ' : 'Vater · '}${p.phone2}</a>` : ''}
             </div>
-            ${pending ? `
-            <div style="margin-top:8px;background:#FEF3C7;border-radius:8px;padding:8px 10px;font-size:12px;color:#92400E">
-              <div style="font-weight:700;margin-bottom:2px">⏳ Änderungsvorschlag der Eltern</div>
-              <div>Name: ${pending.name}${pending.number ? ` · Nr: ${pending.number}` : ''}</div>
-              ${pending.nameMother || pending.phone ? `<div>Mutter: ${pending.nameMother || '–'}${pending.phone ? ` · ${pending.phone}` : ''}</div>` : ''}
-              ${pending.nameFather || pending.phone2 ? `<div>Vater: ${pending.nameFather || '–'}${pending.phone2 ? ` · ${pending.phone2}` : ''}</div>` : ''}
-              <div style="display:flex;gap:8px;margin-top:6px">
-                <button onclick="approvePlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--green-dark);color:white;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✓ Übernehmen</button>
-                <button onclick="rejectPlayerEdit(${p.id})" style="flex:1;border:none;border-radius:6px;background:var(--gray-300,#D1D5DB);color:#374151;font-weight:700;font-size:12px;padding:6px;cursor:pointer">✗ Ablehnen</button>
-              </div>
-            </div>` : ''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
             <button onclick="openEditPlayer(${p.id})" aria-label="Bearbeiten" style="border:none;background:transparent;color:var(--gray-500);font-size:22px;line-height:1;cursor:pointer;padding:6px;margin:-6px -6px -4px 0">✎</button>
@@ -4073,14 +4057,12 @@ function renderParentTeam(filter = '') {
   );
   document.getElementById('parent-team-players').innerHTML = filtered.map(p => {
     const isMe = p.id === currentPlayerId;
-    const pending = isMe ? state.playerEdits[p.id] : null;
     return `
     <div class="contact-box" style="display:flex;align-items:center;gap:12px;background:${isMe ? 'var(--bordeaux-light)' : 'var(--gray-150)'};border-radius:12px;padding:10px 14px;${isMe ? 'border:1.5px solid var(--bordeaux);' : ''}">
       <div class="avatar ${getAvatarClass(p.id - 1)}" style="width:40px;height:40px;font-size:13px;font-weight:800;flex-shrink:0">${getInitials(p.name)}</div>
       <div style="flex:1;min-width:0">
         <div class="player-name" style="font-size:14px;${isMe ? 'color:var(--bordeaux);font-weight:800;' : ''}">${p.name} <span style="font-size:12px;font-weight:800;${p.number ? 'color:var(--gray-500)' : 'color:var(--red)'}">#${p.number || '??'}</span></div>
         ${isMe ? `<button onclick="openPlayerEditProposal(${p.id})" style="border:none;background:transparent;color:var(--bordeaux);font-size:12px;font-weight:700;text-decoration:underline;cursor:pointer;padding:2px 0">✎ Angaben ändern</button>` : ''}
-        ${pending ? `<div style="font-size:11px;color:var(--gray-500);margin-top:2px">⏳ Vorschlag wartet auf Trainer-Freigabe</div>` : ''}
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
         <a class="player-card-phone" href="tel:${p.phone.replace(/\s/g,'')}">${p.nameMother ? p.nameMother.split(' ')[0] + ' · ' : p.phone2 ? 'Mutter · ' : ''}${p.phone}</a>
@@ -4110,13 +4092,12 @@ function openPlayerEditProposal(playerId) {
   const p = PLAYERS.find(x => x.id === playerId);
   if (!p) return;
   pepPlayerId = playerId;
-  const pending = state.playerEdits[playerId];
-  document.getElementById('pep-name').value = pending ? pending.name : (p.name || '');
-  document.getElementById('pep-number').value = pending ? (pending.number || '') : (p.number || '');
-  document.getElementById('pep-mother-name').value = pending ? (pending.nameMother || '') : (p.nameMother || '');
-  document.getElementById('pep-mother-phone').value = pending ? (pending.phone || '') : (p.phone || '');
-  document.getElementById('pep-father-name').value = pending ? (pending.nameFather || '') : (p.nameFather || '');
-  document.getElementById('pep-father-phone').value = pending ? (pending.phone2 || '') : (p.phone2 || '');
+  document.getElementById('pep-name').value = p.name || '';
+  document.getElementById('pep-number').value = p.number || '';
+  document.getElementById('pep-mother-name').value = p.nameMother || '';
+  document.getElementById('pep-mother-phone').value = p.phone || '';
+  document.getElementById('pep-father-name').value = p.nameFather || '';
+  document.getElementById('pep-father-phone').value = p.phone2 || '';
   document.getElementById('player-edit-proposal-modal').classList.add('open');
 }
 
@@ -4131,9 +4112,10 @@ function closePlayerEditProposalOutside(e) {
 
 function submitPlayerEditProposal() {
   if (!pepPlayerId) return;
+  const idx = PLAYERS.findIndex(p => p.id === pepPlayerId);
+  if (idx === -1) return;
   const name = document.getElementById('pep-name').value.trim();
   const numberVal = document.getElementById('pep-number').value.trim();
-  const number = numberVal ? Number(numberVal) : undefined;
   const nameMother = document.getElementById('pep-mother-name').value.trim();
   const phone = document.getElementById('pep-mother-phone').value.trim();
   const nameFather = document.getElementById('pep-father-name').value.trim();
@@ -4142,49 +4124,18 @@ function submitPlayerEditProposal() {
     showToast('Bitte Name eingeben');
     return;
   }
-  const edit = { name, phone, ts: Date.now() };
-  if (number) edit.number = number;
-  if (nameMother) edit.nameMother = nameMother;
-  if (nameFather) edit.nameFather = nameFather;
-  if (phone2) edit.phone2 = phone2;
-  state.playerEdits[pepPlayerId] = edit;
-  saveState();
-  apiPatch({ action: 'proposePlayerEdit', playerId: pepPlayerId, edit });
-  closePlayerEditProposal();
-  renderParentTeam();
-  showToast('✅ Vorschlag an Trainer gesendet');
-}
-
-async function approvePlayerEdit(playerId) {
-  const edit = state.playerEdits[playerId];
-  const idx = PLAYERS.findIndex(p => p.id === playerId);
-  if (!edit || idx === -1) return;
-  const player = { ...PLAYERS[idx], name: edit.name, phone: edit.phone };
-  if (edit.number) player.number = edit.number;
-  if (edit.nameMother) player.nameMother = edit.nameMother;
-  if (edit.nameFather) player.nameFather = edit.nameFather;
-  if (edit.phone2) player.phone2 = edit.phone2;
+  // Alle Felder unconditionell aus der Maske übernehmen (auch wenn leer), damit ein von
+  // Eltern geleertes Feld auch wirklich geleert wird statt stillschweigend den alten Wert
+  // zu behalten — das hatte zuvor zu scheinbar "verschwundenen" Telefonnummern geführt.
+  const player = { ...PLAYERS[idx], name, phone, nameMother, nameFather, phone2 };
+  player.number = numberVal ? Number(numberVal) : undefined;
   PLAYERS[idx] = player;
   savePlayersLocal();
-  // Warten bis der Spieler-Update sicher im Server-Cache gespeichert ist, bevor die
-  // Anfrage gelöscht wird — sonst können beide Requests denselben Cache-Stand lesen
-  // und der zweite (resolvePlayerEdit) überschreibt den ersten, wodurch die neue
-  // Adresse verloren geht, obwohl die Anfrage als erledigt markiert wurde.
-  await apiPatch({ action: 'upsertPlayer', player });
-  delete state.playerEdits[playerId];
-  saveState();
-  apiPatch({ action: 'resolvePlayerEdit', playerId });
+  apiPatch({ action: 'upsertPlayer', player });
+  closePlayerEditProposal();
   refreshChildSelect();
-  renderPlayers(playerFilter);
-  showToast('✅ Änderung übernommen');
-}
-
-function rejectPlayerEdit(playerId) {
-  delete state.playerEdits[playerId];
-  saveState();
-  apiPatch({ action: 'resolvePlayerEdit', playerId });
-  renderPlayers(playerFilter);
-  showToast('Vorschlag abgelehnt');
+  renderParentTeam();
+  showToast('✅ Angaben gespeichert');
 }
 
 function parentSetStatus(eventId, playerId, newStatus) {
