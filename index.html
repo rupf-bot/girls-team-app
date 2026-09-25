@@ -2928,10 +2928,14 @@ function renderParentNotes() {
     const evLabel = ev ? `${ev.type === 'training' ? '⚽' : '🏆'} ${formatDateShort(ev.date)}` : '';
     if (entry.kind === 'squad') {
       const unseen = !entry.ack || !entry.ack.seen;
+      // Der Aufgebot-Text enthält Tag/Datum/Titel bereits selbst (siehe buildSquadShareText) —
+      // eine zusätzliche Titelzeile hier würde Icon und Datum doppelt anzeigen. Nur bei der
+      // Standardabsage (kein Aufgebot-Text mit Datum) braucht es die Titelzeile.
+      const header = entry.rejected ? `<div style="font-size:13px;font-weight:700;color:var(--navy)">🔸 ${evLabel} · Nicht aufgeboten</div>` : '';
       return `
       <div onclick="ackSquadMessage(${eventId}, ${player.id})" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:${unseen ? 'var(--red-light)' : 'var(--gray-150)'};border-radius:12px;margin-bottom:8px;cursor:pointer">
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:var(--navy)">${entry.rejected ? '🔸' : '🏆'} ${evLabel} · ${entry.rejected ? 'Nicht aufgeboten' : 'Aufgebot'}</div>
+          ${header}
           <div style="font-size:13px;color:var(--navy);margin-top:2px;white-space:pre-line">${entry.msg.text}</div>
         </div>
         ${unseen ? `<div style="width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:4px"></div>` : ''}
