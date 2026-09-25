@@ -2372,17 +2372,7 @@ function closeSquadMessageEntry(eventId, playerId) {
 
 // ── Squad-Aufgebot per WhatsApp teilen ──
 function buildFirstNameList(players) {
-  const firstNameCounts = {};
-  players.forEach(p => {
-    const first = p.name.split(' ')[0];
-    firstNameCounts[first] = (firstNameCounts[first] || 0) + 1;
-  });
-  return players.map(p => {
-    const parts = p.name.split(' ');
-    const first = parts[0];
-    if (firstNameCounts[first] > 1) return `${first} ${parts.slice(1).join(' ')}`;
-    return first;
-  });
+  return players.map(p => p.name.split(' ')[0]);
 }
 function buildSquadShareText(eventId) {
   const ev = state.events.find(e => e.id === eventId);
