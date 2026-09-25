@@ -3552,11 +3552,10 @@ function savePlayer() {
   const phone2     = document.getElementById('pl-father-phone').value.trim();
   const lastName   = name.split(' ').slice(-1)[0];
 
-  const player = { id: editingPlayerId ?? Date.now(), name, parent: 'Familie ' + lastName, phone };
-  if (number)     player.number     = number;
-  if (nameMother) player.nameMother = nameMother;
-  if (phone2)     player.phone2     = phone2;
-  if (nameFather) player.nameFather = nameFather;
+  // Alle Felder unconditionell aus der Maske übernehmen (auch wenn leer), damit nie ein
+  // eingegebener Wert (z.B. Telefonnummer) stillschweigend verworfen wird.
+  const existing = editingPlayerId ? PLAYERS.find(p => p.id === editingPlayerId) : null;
+  const player = { ...existing, id: editingPlayerId ?? Date.now(), name, parent: 'Familie ' + lastName, phone, number, nameMother, nameFather, phone2 };
 
   if (editingPlayerId) {
     const idx = PLAYERS.findIndex(p => p.id === editingPlayerId);
