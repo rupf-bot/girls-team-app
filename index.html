@@ -1884,6 +1884,7 @@ function loadState() {
     state.events = [...generateTrainings(), ...generateTournaments()];
     initDefaultAttendance();
   }
+  deduplicateEvents();
   state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
   saveState();
 }
@@ -1909,6 +1910,37 @@ function pruneObsoleteEvents() {
     delete state.staffAttendance[e.id];
     apiPatch({ action: 'deleteEvent', eventId: e.id });
   });
+}
+
+function deduplicateEvents() {
+  const groups = {};
+  state.events.forEach(ev => {
+    const d = new Date(ev.date);
+    const dateKey = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+    const key = dateKey + '_' + (ev.title || ev.type);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(ev);
+  });
+  let changed = false;
+  Object.values(groups).forEach(group => {
+    if (group.length <= 1) return;
+    group.sort((a, b) => {
+      const sqA = state.squad[a.id] ? Object.values(state.squad[a.id]).filter(v => v === 'in').length : 0;
+      const sqB = state.squad[b.id] ? Object.values(state.squad[b.id]).filter(v => v === 'in').length : 0;
+      if (sqB !== sqA) return sqB - sqA;
+      return b.id - a.id;
+    });
+    for (let i = 1; i < group.length; i++) {
+      const dup = group[i];
+      state.events = state.events.filter(e => e.id !== dup.id);
+      delete state.attendance[dup.id];
+      delete state.squad[dup.id];
+      delete state.staffAttendance[dup.id];
+      apiPatch({ action: 'deleteEvent', eventId: dup.id });
+      changed = true;
+    }
+  });
+  if (changed) saveState();
 }
 
 // ── Server-Sync (gemeinsamer Stand für Coach & Eltern via Cloudflare KV) ──
@@ -1972,6 +2004,7 @@ async function syncFromServer(rerender = true) {
       initDefaultAttendance();
       apiPatch({ action: 'bootstrapEvents', events: state.events });
     }
+    deduplicateEvents();
     state.events.sort((a,b) => new Date(a.date) - new Date(b.date));
     saveState();
 
@@ -2257,7 +2290,7 @@ function setSquadStatus(eventId, playerId, status) {
 }
 function getSquadCount(eventId) {
   if (!state.squad[eventId]) return 0;
-  return PLAYERS.filter(p => state.squad[eventId][p.id] === 'in').length;
+  return PLAYERS.filter(p => state.squad[eventId][p.id] === 'in' && getStatus(eventId, p.id) === 'coming').length;
 }
 function getBenchedCount(playerId) {
   // Past tournaments where player registered (coming) but coach set out
@@ -3115,6 +3148,11 @@ function renderTournamentDetail(ev) {
       <div>${injured.map(p => playerRowSimple(p, 'injured')).join('')}</div>` : ''}
     ` : ''}
 
+    ${isCoach && squadCount > 0 ? `
+    <div style="padding:4px 16px 12px">
+      <button onclick="shareSquad(${ev.id})" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green-light);border:1.5px solid var(--green);border-radius:12px;padding:13px 14px;font-size:14px;font-weight:700;color:var(--green-dark);cursor:pointer">📤 Aufgebot an Eltern senden</button>
+    </div>` : ''}
+
     ${isCoach ? `
     <div class="player-section-title" style="margin-top:8px">Trainer Team</div>
     <div>${renderStaffRows(ev)}</div>` : ''}
@@ -3149,6 +3187,27 @@ function coachSetSquad(eventId, playerId, status) {
   if (ev) renderTournamentDetail(ev);
   const squadCount = getSquadCount(eventId);
   showToast(status === 'in' ? `✓ Im Aufgebot (${squadCount}/10)` : `✗ Nicht berücksichtigt`);
+}
+
+function shareSquad(eventId) {
+  const ev = state.events.find(e => e.id === eventId);
+  if (!ev) return;
+  const squadIn = PLAYERS.filter(p => getSquadStatus(eventId, p.id) === 'in' && getStatus(eventId, p.id) === 'coming');
+  const title = ev.title || 'Turnier';
+  const lines = [
+    `🏆 ${title} – ${formatDateShort(ev.date)}`,
+    `📍 ${ev.location}`,
+    `⏰ ${formatTime(ev.date)} Uhr`,
+    '',
+    `✅ Im Aufgebot (${squadIn.length}):`,
+    ...squadIn.map((p, i) => `${i + 1}. ${p.name}`),
+  ];
+  const text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Aufgebot kopiert')).catch(() => showToast('Kopieren fehlgeschlagen'));
+  }
 }
 
 function coachSetStatus(eventId, playerId, status) {
